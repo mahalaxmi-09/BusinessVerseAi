@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuthState();
+  const { login, demoLogin } = useAuthState();
 
   const [email, setEmail] = useState('admin@businessverse.ai');
   const [password, setPassword] = useState('password123');
@@ -60,11 +60,28 @@ export const LoginView: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg('');
-    // Mock successful signup and redirect to platform
-    setTimeout(() => {
+    
+    try {
+      const success = await demoLogin();
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1000);
+      
+      if (success) {
+        // Overlay name and email values for the new user profile in local storage
+        const savedUser = localStorage.getItem('bv_user');
+        if (savedUser) {
+          const userObj = JSON.parse(savedUser);
+          if (fullName) userObj.name = fullName;
+          if (email) userObj.email = email;
+          localStorage.setItem('bv_user', JSON.stringify(userObj));
+        }
+        navigate('/dashboard');
+      } else {
+        setErrorMsg('Sign up failed. Please try again.');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMsg('Server connection error. Please try again.');
+    }
   };
 
   return (
@@ -288,7 +305,17 @@ export const LoginView: React.FC = () => {
                 <span>{isSignUp ? 'Already have an account?' : 'Need to simulate a new company?'} </span>
                 <button 
                   type="button" 
-                  onClick={() => setIsSignUp(!isSignUp)}
+                  onClick={() => {
+                    const nextMode = !isSignUp;
+                    setIsSignUp(nextMode);
+                    if (nextMode) {
+                      if (email === 'admin@businessverse.ai') setEmail('');
+                      if (password === 'password123') setPassword('');
+                    } else {
+                      if (!email) setEmail('admin@businessverse.ai');
+                      if (!password) setPassword('password123');
+                    }
+                  }}
                   className="text-purple-400 hover:text-purple-300 font-bold focus:outline-none cursor-pointer bg-transparent border-none"
                 >
                   {isSignUp ? 'Sign In' : 'Create Sandbox Account'}

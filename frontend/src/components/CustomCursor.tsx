@@ -5,22 +5,25 @@ export const CustomCursor: React.FC = () => {
   const [hovered, setHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isClicking, setIsClicking] = useState(false);
 
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
+  // Position of the mouse
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
 
-  const springConfig = { damping: 25, stiffness: 250 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
+  // Trailing ring spring physics (adds smooth delay/follow effect)
+  const ringX = useSpring(mouseX, { damping: 30, stiffness: 220 });
+  const ringY = useSpring(mouseY, { damping: 30, stiffness: 220 });
 
   useEffect(() => {
-    // Check accessibility reduced-motion preference
+    // Check prefers-reduced-motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setReducedMotion(mediaQuery.matches);
     
     const handleMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX - 12);
-      cursorY.set(e.clientY - 12);
+      // Offset inner dot to center
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
       if (!isVisible) setIsVisible(true);
     };
 
@@ -37,16 +40,22 @@ export const CustomCursor: React.FC = () => {
       setHovered(!!isInteractive);
     };
 
+    const handleMouseDown = () => setIsClicking(true);
+    const handleMouseUp = () => setIsClicking(false);
+
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
     
     return () => {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [cursorX, cursorY, isVisible]);
+  }, [mouseX, mouseY, isVisible]);
 
-  // Hide cursor on touch devices or if prefers-reduced-motion is active
   if (reducedMotion || typeof window !== 'undefined' && 'ontouchstart' in window) {
     return null;
   }
@@ -54,45 +63,69 @@ export const CustomCursor: React.FC = () => {
   return (
     <>
       {isVisible && (
-        <motion.div
-          style={{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            x: cursorXSpring,
-            y: cursorYSpring,
-            pointerEvents: 'none',
-            zIndex: 9999,
-          }}
-          animate={{
-            scale: hovered ? 1.5 : 1,
-            backgroundColor: hovered ? 'rgba(124, 58, 237, 0.15)' : 'transparent',
-            borderColor: hovered ? 'rgba(124, 58, 237, 0.8)' : 'rgba(255, 255, 255, 0.4)',
-            width: hovered ? 36 : 24,
-            height: hovered ? 36 : 24,
-            borderWidth: 1.5,
-          }}
-          transition={{ type: 'tween', ease: 'backOut', duration: 0.2 }}
-          className="rounded-full border hidden md:block"
-        />
-      )}
-      
-      {isVisible && (
-        <motion.div
-          style={{
-            position: 'fixed',
-            left: 0,
-            top: 0,
-            x: cursorX,
-            y: cursorY,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            // center dot offset
-            marginLeft: 10,
-            marginTop: 10,
-          }}
-          className="w-1 h-1 bg-purple-500 rounded-full hidden md:block"
-        />
+        <>
+          {/* Outer Trailing Glowing Lens (delayed spring movement) */}
+          <motion.div
+            style={{
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              x: ringX,
+              y: ringY,
+              translateX: '-50%',
+              translateY: '-50%',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            animate={{
+              width: hovered ? 46 : 28,
+              height: hovered ? 46 : 28,
+              borderColor: hovered ? 'rgba(168, 85, 247, 0.8)' : 'rgba(6, 182, 212, 0.4)',
+              backgroundColor: hovered ? 'rgba(168, 85, 247, 0.05)' : 'rgba(6, 182, 212, 0.01)',
+              boxShadow: hovered 
+                ? '0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 8px rgba(168, 85, 247, 0.2)'
+                : '0 0 8px rgba(6, 182, 212, 0.1)',
+              scale: isClicking ? 0.85 : 1,
+            }}
+            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+            className="rounded-full border border-solid hidden md:block backdrop-blur-[0.5px]"
+          />
+
+          {/* Inner Glowing Core Dot & Crosshair Scanner (instant response) */}
+          <motion.div
+            style={{
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              x: mouseX,
+              y: mouseY,
+              translateX: '-50%',
+              translateY: '-50%',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            animate={{
+              scale: hovered ? 2.5 : 1,
+              backgroundColor: hovered ? '#ffffff' : '#06B6D4',
+              boxShadow: hovered 
+                ? '0 0 10px #ffffff, 0 0 20px rgba(168, 85, 247, 0.6)'
+                : '0 0 8px rgba(6, 182, 212, 0.8)',
+            }}
+            transition={{ type: 'tween', ease: 'easeOut', duration: 0.15 }}
+            className="w-1.5 h-1.5 rounded-full hidden md:block flex items-center justify-center relative"
+          >
+            {/* Holographic scanning ticks shown on hover */}
+            {hovered && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute text-[8px] font-black text-purple-400 select-none pointer-events-none"
+              >
+                +
+              </motion.span>
+            )}
+          </motion.div>
+        </>
       )}
     </>
   );

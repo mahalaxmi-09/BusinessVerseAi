@@ -40,19 +40,30 @@ export const LandingPage: React.FC = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Force autoplay trigger on mount / load / clip swap
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch((err) => {
+        console.log("Autoplay check:", err);
+      });
+    }
+  }, [activeClip, videoLoaded]);
+
   // Play/Pause scroll threshold observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (videoRef.current) {
+          // Pause only if it goes completely offscreen
           if (entry.isIntersecting && isPlaying) {
             videoRef.current.play().catch(() => {});
-          } else {
+          } else if (!entry.isIntersecting) {
             videoRef.current.pause();
           }
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.05 }
     );
 
     if (videoRef.current) {
@@ -82,6 +93,18 @@ export const LandingPage: React.FC = () => {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (videoRef.current) {
+      const nextMuteState = !isMuted;
+      videoRef.current.muted = nextMuteState;
+      setIsMuted(nextMuteState);
+      if (!isPlaying) {
+        videoRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
     }
   };
 
@@ -263,7 +286,10 @@ export const LandingPage: React.FC = () => {
           className="lg:col-span-5 w-full flex justify-center items-center relative z-10"
         >
           {/* Card Container with custom border radius, glass background, purple glow border, and soft shadows */}
-          <div className="w-full aspect-[16/9] rounded-[28px] bg-gradient-to-br from-[#101828]/95 to-[#070B17]/95 border border-purple-500/30 p-[1px] shadow-[0_0_30px_rgba(124,58,237,0.25)] relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(124,58,237,0.4)] group cursor-pointer flex flex-col justify-between">
+          <div 
+            onClick={handleCardClick}
+            className="w-full aspect-[16/9] rounded-[28px] bg-gradient-to-br from-[#101828]/95 to-[#070B17]/95 border border-purple-500/30 p-[1px] shadow-[0_0_30px_rgba(124,58,237,0.25)] relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(124,58,237,0.4)] group cursor-pointer flex flex-col justify-between"
+          >
             
             {/* Ambient background glow inside the card */}
             <div className="absolute inset-0 bg-[#070B17] rounded-[28px] overflow-hidden">
@@ -282,9 +308,9 @@ export const LandingPage: React.FC = () => {
               <video
                 ref={videoRef}
                 key={activeClip}
-                src={activeClip === 'clip1' ? '/clip1.mp4' : '/clip2.mp4'}
+                src={activeClip === 'clip1' ? '/videos/clip1.mp4' : '/videos/clip2.mp4'}
                 autoPlay
-                muted={isMuted}
+                muted
                 loop
                 playsInline
                 onLoadedData={() => setVideoLoaded(true)}
@@ -357,7 +383,7 @@ export const LandingPage: React.FC = () => {
                 <h4 className="text-sm font-black text-white">Meet Ava</h4>
                 <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your AI Business Consultant</p>
                 <p className="text-[9px] text-text-muted mt-2 leading-relaxed">
-                  Click the controls to hear the introduction or swap clips
+                  Click anywhere on the card to unmute/mute audio
                 </p>
               </div>
             </div>

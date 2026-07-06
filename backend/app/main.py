@@ -61,8 +61,19 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-# Mock user database
-MOCK_USER_HASH = hash_password("password123")
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+
+# Mock user database dictionary
+USERS_DB = {
+    "admin@businessverse.ai": {
+        "password_hash": hash_password("password123"),
+        "role": "owner",
+        "name": "Mahalakshmi"
+    }
+}
 
 # 3. ROUTES
 @app.get("/")
@@ -82,22 +93,49 @@ def health_check():
         "latency_ms": 2.5
     }
 
+@app.post("/api/auth/register")
+def register(req: RegisterRequest):
+    if req.email in USERS_DB:
+        raise HTTPException(status_code=400, detail="Email is already registered in the database.")
+    
+    USERS_DB[req.email] = {
+        "password_hash": hash_password(req.password),
+        "role": "owner",
+        "name": req.name
+    }
+    
+    token = create_access_token({
+        "sub": req.email,
+        "role": "owner",
+        "name": req.name
+    })
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "email": req.email,
+            "role": "owner",
+            "name": req.name
+        }
+    }
+
 @app.post("/api/auth/login")
 def login(req: LoginRequest):
-    # For demo ease, verify email and matching password
-    if req.email == "admin@businessverse.ai" and verify_password(MOCK_USER_HASH, req.password):
+    user_info = USERS_DB.get(req.email)
+    if user_info and verify_password(user_info["password_hash"], req.password):
         token = create_access_token({
             "sub": req.email,
-            "role": "owner",
-            "name": "Mahalakshmi"
+            "role": user_info["role"],
+            "name": user_info["name"]
         })
         return {
             "access_token": token,
             "token_type": "bearer",
             "user": {
                 "email": req.email,
-                "role": "owner",
-                "name": "Mahalakshmi"
+                "role": user_info["role"],
+                "name": user_info["name"]
             }
         }
     raise HTTPException(status_code=400, detail="Invalid email or password credentials.")

@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
-  const { login, demoLogin } = useAuthState();
+  const { login, register, demoLogin } = useAuthState();
 
   const [email, setEmail] = useState('admin@businessverse.ai');
   const [password, setPassword] = useState('password123');
@@ -36,18 +36,8 @@ export const LoginView: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
 
-  // Mouse offset state for 3D card parallax tilt
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX - window.innerWidth / 2) * 0.02;
-      const y = (e.clientY - window.innerHeight / 2) * 0.02;
-      setMouseOffset({ x, y });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  // Hover-to-open state for the credentials form card
+  const [isOpen, setIsOpen] = useState(false);
 
   // Footer modals states
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -76,18 +66,10 @@ export const LoginView: React.FC = () => {
     setErrorMsg('');
     
     try {
-      const success = await demoLogin();
+      const success = await register(fullName, email, password);
       setIsLoading(false);
       
       if (success) {
-        // Overlay name and email values for the new user profile in local storage
-        const savedUser = localStorage.getItem('bv_user');
-        if (savedUser) {
-          const userObj = JSON.parse(savedUser);
-          if (fullName) userObj.name = fullName;
-          if (email) userObj.email = email;
-          localStorage.setItem('bv_user', JSON.stringify(userObj));
-        }
         navigate('/dashboard');
       } else {
         setErrorMsg('Sign up failed. Please try again.');
@@ -108,7 +90,7 @@ export const LoginView: React.FC = () => {
       <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-12 relative z-10">
         
         {/* Left Side: Animated Startup Ecosystem Showcase (60% width on large screens) */}
-        <div style={{ perspective: 1000 }} className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-[#090D1A]/40 border-r border-white/5 relative overflow-hidden">
+        <div className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-[#090D1A]/40 border-r border-white/5 relative overflow-hidden">
           {/* Animated dot grid background */}
           <div className="absolute inset-0 bg-[radial-gradient(#151B2D_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
           <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-650/5 rounded-full blur-3xl pointer-events-none" />
@@ -137,13 +119,9 @@ export const LoginView: React.FC = () => {
 
             {/* Glowing Digital Twin Showcase Box */}
             <motion.div 
-              animate={{ 
-                rotateY: mouseOffset.x * 0.7, 
-                rotateX: -mouseOffset.y * 0.7,
-                x: mouseOffset.x * 0.3,
-                y: mouseOffset.y * 0.3
-              }}
-              whileHover={{ scale: 1.02, boxShadow: '0 20px 50px rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.3)' }}
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              whileHover={{ scale: 1.02, y: -10, boxShadow: '0 20px 50px rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.3)' }}
               className="w-full max-w-[400px] p-6 rounded-3xl border border-white/5 bg-[#101828]/60 backdrop-blur-xl relative overflow-hidden shadow-2xl flex flex-col justify-between transition-all duration-300"
             >
               {/* Connected lines simulation (SVG) */}
@@ -214,155 +192,166 @@ export const LoginView: React.FC = () => {
             {/* Premium Glass Login Card */}
             <motion.div 
               animate={{ 
-                rotateY: mouseOffset.x * 0.5, 
-                rotateX: -mouseOffset.y * 0.5,
-                x: mouseOffset.x * 0.2,
-                y: mouseOffset.y * 0.2
+                height: isOpen ? 'auto' : '92px'
               }}
-              whileHover={{ scale: 1.01, boxShadow: '0 10px 40px rgba(124, 58, 237, 0.15)', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-              transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-              className="p-6 md:p-8 rounded-3xl border border-white/10 bg-[#101828]/60 backdrop-blur-xl shadow-2xl space-y-6 transition-all duration-300"
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              onMouseEnter={() => setIsOpen(true)}
+              className="p-6 rounded-[32px] border border-white/5 bg-[#101828]/85 backdrop-blur-xl shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col justify-start"
             >
-              <div className="text-center space-y-1">
-                <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center justify-center space-x-1.5">
-                  <LogIn className="w-4 h-4 text-purple-400" />
-                  <span>{isSignUp ? 'REGISTER' : 'LOGIN'}</span>
-                </h3>
-                <p className="text-[10px] text-text-muted">
-                  {isSignUp ? 'Create a secure twin sandbox profile' : 'Enter credentials to load digital twin cockpit'}
-                </p>
+              {/* Glowing corner highlights matching mockup */}
+              <div className="absolute top-0 left-0 w-16 h-8 border-t-2 border-l-2 border-[#06B6D4] rounded-tl-3xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-16 h-8 border-b-2 border-r-2 border-[#06B6D4] rounded-br-3xl pointer-events-none" />
+              
+              <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent shadow-[0_0_8px_#7C3AED] pointer-events-none" />
+              <div className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent shadow-[0_0_8px_#7C3AED] pointer-events-none" />
+
+              {/* Debossed Inset Header Box */}
+              <div className="bg-black/30 border border-white/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] rounded-2xl py-3.5 px-6 flex items-center justify-center space-x-3 select-none mb-4 relative z-10">
+                <LogIn className="w-4 h-4 text-purple-400 drop-shadow-[0_0_6px_#7C3AED]" />
+                <span className="text-xs font-black text-white tracking-[0.2em] uppercase">
+                  {isSignUp ? 'REGISTER' : 'LOGIN'}
+                </span>
+                <Heart className="w-4 h-4 text-purple-400 drop-shadow-[0_0_6px_#7C3AED] fill-current" />
               </div>
 
-              {errorMsg && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-[10px] text-center font-bold">
-                  {errorMsg}
-                </div>
-              )}
+              {/* Form Content Wrapper */}
+              <motion.div
+                initial={false}
+                animate={{ opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? 'auto' : 'none' }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6 relative z-10 w-full"
+              >
+                {errorMsg && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-[10px] text-center font-bold">
+                    {errorMsg}
+                  </div>
+                )}
 
-              <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
-                {isSignUp && (
+                <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+                  {isSignUp && (
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Full Name</label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                          placeholder="Maha Lakshmi"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Full Name</label>
+                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Email Address</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                      <Mail className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
                       <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="Maha Lakshmi"
+                        placeholder="admin@businessverse.ai"
                         required
                       />
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-1">
-                  <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                      placeholder="admin@businessverse.ai"
-                      required
-                    />
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 text-text-muted hover:text-white cursor-pointer focus:outline-none flex items-center justify-center bg-transparent border-none"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-text-muted hover:text-white cursor-pointer focus:outline-none flex items-center justify-center bg-transparent border-none"
-                    >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
+                  {/* Remember & forgot */}
+                  <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
+                    <label className="flex items-center space-x-1.5 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        onChange={() => setRememberMe(!rememberMe)}
+                        className="rounded bg-[#070B17] border-white/15 text-purple-650 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                      />
+                      <span>Remember me</span>
+                    </label>
+                    <span className="hover:text-white transition-colors cursor-pointer">Forgot Password?</span>
                   </div>
+
+                  {/* Action button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3 bg-gradient-to-r from-purple-650 to-indigo-650 hover:from-purple-550 hover:to-indigo-550 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-indigo-950/40 cursor-pointer focus:outline-none border-none disabled:opacity-50"
+                  >
+                    <span>{isLoading ? 'Decrypting keys...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+
+                {/* Split separator */}
+                <div className="relative flex py-2 items-center text-text-muted text-[8px] font-black uppercase tracking-widest">
+                  <div className="flex-grow border-t border-white/5"></div>
+                  <span className="flex-shrink mx-3">or continue with</span>
+                  <div className="flex-grow border-t border-white/5"></div>
                 </div>
 
-                {/* Remember & forgot */}
-                <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
-                  <label className="flex items-center space-x-1.5 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={rememberMe}
-                      onChange={() => setRememberMe(!rememberMe)}
-                      className="rounded bg-[#070B17] border-white/15 text-purple-650 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                    />
-                    <span>Remember me</span>
-                  </label>
-                  <span className="hover:text-white transition-colors cursor-pointer">Forgot Password?</span>
+                {/* Social OAuth triggers */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.186 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.706 0 3.199.687 4.3 1.8l3.186-3.186C19.227 1.8 15.932.9 12.24.9c-6.133 0-11.1 4.967-11.1 11.1s4.967 11.1 11.1 11.1c5.961 0 10.985-4.28 10.985-11.1 0-.643-.075-1.286-.2-1.725H12.24Z" />
+                    </svg>
+                    <span>Google</span>
+                  </button>
+                  <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4 18.3 4.3 18.3 4.3c.7 1.6.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
+                    </svg>
+                    <span>GitHub</span>
+                  </button>
                 </div>
 
-                {/* Action button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 bg-gradient-to-r from-purple-650 to-indigo-650 hover:from-purple-550 hover:to-indigo-550 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-indigo-950/40 cursor-pointer focus:outline-none border-none disabled:opacity-50"
-                >
-                  <span>{isLoading ? 'Decrypting keys...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </form>
-
-              {/* Split separator */}
-              <div className="relative flex py-2 items-center text-text-muted text-[8px] font-black uppercase tracking-widest">
-                <div className="flex-grow border-t border-white/5"></div>
-                <span className="flex-shrink mx-3">or continue with</span>
-                <div className="flex-grow border-t border-white/5"></div>
-              </div>
-
-              {/* Social OAuth triggers */}
-              <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.186 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.706 0 3.199.687 4.3 1.8l3.186-3.186C19.227 1.8 15.932.9 12.24.9c-6.133 0-11.1 4.967-11.1 11.1s4.967 11.1 11.1 11.1c5.961 0 10.985-4.28 10.985-11.1 0-.643-.075-1.286-.2-1.725H12.24Z" />
-                  </svg>
-                  <span>Google</span>
-                </button>
-                <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4 18.3 4.3 18.3 4.3c.7 1.6.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
-                  </svg>
-                  <span>GitHub</span>
-                </button>
-              </div>
-
-              {/* Toggle register / signin link */}
-              <div className="text-center text-[10px] text-text-muted">
-                <span>{isSignUp ? 'Already have an account?' : 'Need to simulate a new company?'} </span>
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    const nextMode = !isSignUp;
-                    setIsSignUp(nextMode);
-                    if (nextMode) {
-                      if (email === 'admin@businessverse.ai') setEmail('');
-                      if (password === 'password123') setPassword('');
-                    } else {
-                      if (!email) setEmail('admin@businessverse.ai');
-                      if (!password) setPassword('password123');
-                    }
-                  }}
-                  className="text-purple-400 hover:text-purple-300 font-bold focus:outline-none cursor-pointer bg-transparent border-none"
-                >
-                  {isSignUp ? 'Sign In' : 'Create Sandbox Account'}
-                </button>
-              </div>
+                {/* Toggle register / signin link */}
+                <div className="text-center text-[10px] text-text-muted">
+                  <span>{isSignUp ? 'Already have an account?' : 'Need to simulate a new company?'} </span>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const nextMode = !isSignUp;
+                      setIsSignUp(nextMode);
+                      if (nextMode) {
+                        if (email === 'admin@businessverse.ai') setEmail('');
+                        if (password === 'password123') setPassword('');
+                      } else {
+                        if (!email) setEmail('admin@businessverse.ai');
+                        if (!password) setPassword('password123');
+                      }
+                    }}
+                    className="text-purple-400 hover:text-purple-300 font-bold focus:outline-none cursor-pointer bg-transparent border-none"
+                  >
+                    {isSignUp ? 'Sign In' : 'Create Sandbox Account'}
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
 
           </div>

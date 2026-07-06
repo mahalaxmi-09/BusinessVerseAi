@@ -544,6 +544,13 @@ export const LandingPage: React.FC = () => {
     }
   };
 
+  // Synchronize the video element's muted property to the React state when activeClip or isMuted changes
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [activeClip, isMuted]);
+
   const onLaunchDashboard = () => {
     navigate('/login');
   };
@@ -821,7 +828,7 @@ export const LandingPage: React.FC = () => {
                 key={activeClip}
                 src={activeClip === 'clip1' ? '/videos/clip1.mp4' : '/videos/clip2.mp4'}
                 autoPlay
-                muted
+                muted={isMuted}
                 playsInline
                 onLoadedData={() => setVideoLoaded(true)}
                 onEnded={handleVideoEnded}

@@ -82,6 +82,211 @@ export const LoginView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#070B17] relative overflow-y-auto flex flex-col font-sans select-none text-text-white">
+      {/* Custom Styles Injection */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+        @property --a {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: 0deg;
+        }
+
+        @keyframes rotating {
+          0% {
+            --a: 0deg;
+          }
+          100% {
+            --a: 360deg;
+          }
+        }
+
+        .tpl-box {
+          position: relative;
+          width: 400px;
+          height: 200px;
+          background: repeating-conic-gradient(from var(--a),
+                  #824C96 0%,
+                  #824C96 5%,
+                  transparent 5%,
+                  transparent 40%,
+                  #824C96 50%);
+          filter: drop-shadow(0 15px 50px #000);
+          animation: rotating 4s linear infinite;
+          border-radius: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          transition: 0.5s;
+          box-sizing: border-box;
+        }
+
+        .tpl-box * {
+          font-family: "Poppins", sans-serif;
+          box-sizing: border-box;
+        }
+
+        .tpl-box.is-open {
+          width: 450px;
+          height: 500px;
+        }
+
+        .tpl-box::before {
+          content: "";
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: repeating-conic-gradient(from var(--a),
+                  #06B6D4 0%,
+                  #06B6D4 5%,
+                  transparent 5%,
+                  transparent 40%,
+                  #06B6D4 50%);
+          filter: drop-shadow(0 15px 50px #000);
+          border-radius: 20px;
+          animation: rotating 4s linear infinite;
+          animation-delay: -1s;
+        }
+
+        .tpl-box::after {
+          content: "";
+          position: absolute;
+          inset: 4px;
+          background: #101828;
+          border-radius: 15px;
+          border: 8px solid #151B2D;
+        }
+
+        .tpl-login {
+          position: absolute;
+          inset: 60px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 10px;
+          flex-direction: column;
+          background: rgba(0, 0, 0, 0.2);
+          z-index: 10;
+          box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.5);
+          border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+          transition: 0.5s;
+          color: #fff;
+          overflow: hidden;
+        }
+
+        .tpl-box.is-open .tpl-login {
+          inset: 40px;
+        }
+
+        .tpl-loginBx {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          transform: translateY(126px);
+          gap: 20px;
+          width: 70%;
+          transition: 0.5s;
+        }
+
+        .tpl-box.is-open .tpl-loginBx {
+          transform: translateY(0px);
+        }
+
+        .tpl-loginBx h2 {
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          font-weight: 600;
+          font-size: 1.25rem;
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 10px !important;
+          margin-bottom: 5px;
+          color: #fff !important;
+        }
+
+        .tpl-loginBx h2 svg, .tpl-loginBx h2 i {
+          color: #824C96 !important;
+          filter: drop-shadow(0 0 5px #824C96) drop-shadow(0 0 30px #824C96) !important;
+        }
+
+        .tpl-loginBx input {
+          width: 100%;
+          padding: 10px 20px;
+          outline: none;
+          font-size: 1em;
+          color: #fff !important;
+          background: rgba(0, 0, 0, 0.15) !important;
+          border: 2px solid #fff !important;
+          border-radius: 30px !important;
+          transition: all 0.3s;
+        }
+
+        .tpl-loginBx input:focus {
+          border-color: #06B6D4 !important;
+          background: rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .tpl-loginBx input::placeholder {
+          color: #999 !important;
+        }
+
+        .tpl-submit-btn {
+          background: #06B6D4 !important;
+          border: none !important;
+          font-weight: 600 !important;
+          color: #111 !important;
+          cursor: pointer;
+          transition: 0.5s;
+          border-radius: 30px !important;
+          width: 100%;
+          padding: 12px 20px;
+          font-size: 1em;
+          text-align: center;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-top: 10px;
+        }
+
+        .tpl-submit-btn:hover {
+          box-shadow: 0 0 10px #06B6D4, 0 0 40px #06B6D4 !important;
+          transform: scale(1.01);
+        }
+
+        .tpl-group {
+          display: flex;
+          width: 100%;
+          justify-content: space-between;
+          font-size: 0.85em;
+          padding: 0 5px;
+          margin-top: 5px;
+        }
+
+        .tpl-group a, .tpl-group button {
+          color: #fff !important;
+          text-decoration: none !important;
+          transition: color 0.3s;
+          background: transparent !important;
+          border: none !important;
+          cursor: pointer;
+        }
+
+        .tpl-group a:hover, .tpl-group button:hover {
+          color: #06B6D4 !important;
+        }
+
+        .tpl-group button.tpl-signup-link {
+          color: #824C96 !important;
+          font-weight: 600 !important;
+        }
+
+        .tpl-group button.tpl-signup-link:hover {
+          color: #9E6FB1 !important;
+        }
+      `}} />
       {/* Background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-900/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-900/5 rounded-full blur-[140px] pointer-events-none" />
@@ -189,170 +394,87 @@ export const LoginView: React.FC = () => {
               <p className="text-xs text-text-muted">Decision cockpit authentication gateway</p>
             </div>
 
-            {/* Premium Glass Login Card */}
-            <motion.div 
-              animate={{ 
-                height: isOpen ? 'auto' : '92px'
-              }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            <div 
               onMouseEnter={() => setIsOpen(true)}
-              className="p-6 rounded-[32px] border border-white/5 bg-[#101828]/85 backdrop-blur-xl shadow-2xl transition-all duration-300 relative overflow-hidden flex flex-col justify-start"
+              className={`tpl-box ${isOpen ? 'is-open' : ''}`}
             >
-              {/* Glowing corner highlights matching mockup */}
-              <div className="absolute top-0 left-0 w-16 h-8 border-t-2 border-l-2 border-[#06B6D4] rounded-tl-3xl pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-16 h-8 border-b-2 border-r-2 border-[#06B6D4] rounded-br-3xl pointer-events-none" />
-              
-              <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent shadow-[0_0_8px_#7C3AED] pointer-events-none" />
-              <div className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent shadow-[0_0_8px_#7C3AED] pointer-events-none" />
+              <div className="tpl-login">
+                <div className="tpl-loginBx">
+                  <h2>
+                    <LogIn className="w-4.5 h-4.5 text-[#ff2770] drop-shadow-[0_0_5px_#ff2770]" />
+                    <span>{isSignUp ? 'REGISTER' : 'LOGIN'}</span>
+                    <Heart className="w-4.5 h-4.5 text-[#ff2770] drop-shadow-[0_0_5px_#ff2770] fill-current" />
+                  </h2>
 
-              {/* Debossed Inset Header Box */}
-              <div className="bg-black/30 border border-white/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] rounded-2xl py-3.5 px-6 flex items-center justify-center space-x-3 select-none mb-4 relative z-10">
-                <LogIn className="w-4 h-4 text-purple-400 drop-shadow-[0_0_6px_#7C3AED]" />
-                <span className="text-xs font-black text-white tracking-[0.2em] uppercase">
-                  {isSignUp ? 'REGISTER' : 'LOGIN'}
-                </span>
-                <Heart className="w-4 h-4 text-purple-400 drop-shadow-[0_0_6px_#7C3AED] fill-current" />
-              </div>
-
-              {/* Form Content Wrapper */}
-              <motion.div
-                initial={false}
-                animate={{ opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? 'auto' : 'none' }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6 relative z-10 w-full"
-              >
-                {errorMsg && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-[10px] text-center font-bold">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
-                  {isSignUp && (
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                        <input
-                          type="text"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                          placeholder="Maha Lakshmi"
-                          required
-                        />
+                  <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="w-full space-y-4">
+                    {errorMsg && (
+                      <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-[10px] text-center font-bold">
+                        {errorMsg}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                    {isSignUp && (
                       <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="admin@businessverse.ai"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full bg-black/10 border-2 border-white rounded-[30px] px-5 py-2.5 text-xs text-white outline-none focus:border-[#45f3ff] transition-all"
+                        placeholder="Full Name"
                         required
                       />
-                    </div>
-                  </div>
+                    )}
 
-                  <div className="space-y-1">
-                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
-                        placeholder="••••••••"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-text-muted hover:text-white cursor-pointer focus:outline-none flex items-center justify-center bg-transparent border-none"
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-black/10 border-2 border-white rounded-[30px] px-5 py-2.5 text-xs text-white outline-none focus:border-[#45f3ff] transition-all"
+                      placeholder="Username"
+                      required
+                    />
+
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-black/10 border-2 border-white rounded-[30px] px-5 py-2.5 text-xs text-white outline-none focus:border-[#45f3ff] transition-all"
+                      placeholder="Password"
+                      required
+                    />
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="tpl-submit-btn border-none"
+                    >
+                      {isLoading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                    </button>
+
+                    <div className="tpl-group">
+                      <span className="cursor-pointer hover:text-[#45f3ff] transition-colors">Forgot Password?</span>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const nextMode = !isSignUp;
+                          setIsSignUp(nextMode);
+                          if (nextMode) {
+                            if (email === 'admin@businessverse.ai') setEmail('');
+                            if (password === 'password123') setPassword('');
+                          } else {
+                            if (!email) setEmail('admin@businessverse.ai');
+                            if (!password) setPassword('password123');
+                          }
+                        }}
+                        className="tpl-signup-link cursor-pointer border-none"
                       >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {isSignUp ? 'Sign In' : 'Sign Up'}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Remember & forgot */}
-                  <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
-                    <label className="flex items-center space-x-1.5 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={rememberMe}
-                        onChange={() => setRememberMe(!rememberMe)}
-                        className="rounded bg-[#070B17] border-white/15 text-purple-650 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                      />
-                      <span>Remember me</span>
-                    </label>
-                    <span className="hover:text-white transition-colors cursor-pointer">Forgot Password?</span>
-                  </div>
-
-                  {/* Action button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full py-3 bg-gradient-to-r from-purple-650 to-indigo-650 hover:from-purple-550 hover:to-indigo-550 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-indigo-950/40 cursor-pointer focus:outline-none border-none disabled:opacity-50"
-                  >
-                    <span>{isLoading ? 'Decrypting keys...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </form>
-
-                {/* Split separator */}
-                <div className="relative flex py-2 items-center text-text-muted text-[8px] font-black uppercase tracking-widest">
-                  <div className="flex-grow border-t border-white/5"></div>
-                  <span className="flex-shrink mx-3">or continue with</span>
-                  <div className="flex-grow border-t border-white/5"></div>
+                  </form>
                 </div>
-
-                {/* Social OAuth triggers */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.186 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.706 0 3.199.687 4.3 1.8l3.186-3.186C19.227 1.8 15.932.9 12.24.9c-6.133 0-11.1 4.967-11.1 11.1s4.967 11.1 11.1 11.1c5.961 0 10.985-4.28 10.985-11.1 0-.643-.075-1.286-.2-1.725H12.24Z" />
-                    </svg>
-                    <span>Google</span>
-                  </button>
-                  <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4 18.3 4.3 18.3 4.3c.7 1.6.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
-                    </svg>
-                    <span>GitHub</span>
-                  </button>
-                </div>
-
-                {/* Toggle register / signin link */}
-                <div className="text-center text-[10px] text-text-muted">
-                  <span>{isSignUp ? 'Already have an account?' : 'Need to simulate a new company?'} </span>
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      const nextMode = !isSignUp;
-                      setIsSignUp(nextMode);
-                      if (nextMode) {
-                        if (email === 'admin@businessverse.ai') setEmail('');
-                        if (password === 'password123') setPassword('');
-                      } else {
-                        if (!email) setEmail('admin@businessverse.ai');
-                        if (!password) setPassword('password123');
-                      }
-                    }}
-                    className="text-purple-400 hover:text-purple-300 font-bold focus:outline-none cursor-pointer bg-transparent border-none"
-                  >
-                    {isSignUp ? 'Sign In' : 'Create Sandbox Account'}
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
 
           </div>
         </div>

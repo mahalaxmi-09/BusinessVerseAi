@@ -18,7 +18,8 @@ import {
   FileCheck,
   TrendingUp,
   Cpu,
-  Fingerprint
+  Fingerprint,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

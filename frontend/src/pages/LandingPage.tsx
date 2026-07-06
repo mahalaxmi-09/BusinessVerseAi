@@ -88,6 +88,12 @@ export const LandingPage: React.FC = () => {
   // Parallax Hero Mouse Movement Offset
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
+  // Time-of-day state for interactive sunburst canvas
+  const [timeOfDay, setTimeOfDay] = useState<'predawn' | 'sunrise' | 'daytime' | 'dusk' | 'sunset' | 'night'>('dusk');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const sunburstCanvasRef = useRef<HTMLCanvasElement>(null);
+  const heroMousePosRef = useRef({ x: -1000, y: -1000 });
+
   // Simulation Sliders
   const [priceMultiplier, setPriceMultiplier] = useState<number>(1.2);
   const [marketingBudget, setMarketingBudget] = useState<number>(2000);
@@ -258,6 +264,141 @@ export const LandingPage: React.FC = () => {
       cancelAnimationFrame(animationId);
     };
   }, []);
+
+  // 3.5. Interactive Sunburst Canvas Emitter Effect
+  useEffect(() => {
+    const canvas = sunburstCanvasRef.current;
+    if (!canvas) return;
+
+    let animationId: number;
+    const ctx = canvas.getContext('2d');
+
+    const handleResize = () => {
+      if (canvas.parentElement) {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+      } else {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // Initialize 180 fiber optic strands fanning out in a semi-circle
+    const strandCount = 180;
+    const strands: Array<{
+      baseAngle: number;
+      length: number;
+      speed: number;
+      phase: number;
+      width: number;
+    }> = [];
+
+    for (let i = 0; i < strandCount; i++) {
+      const percent = i / (strandCount - 1);
+      const angle = Math.PI * (0.12 + percent * 0.76); 
+      strands.push({
+        baseAngle: angle,
+        length: Math.random() * 220 + 160,
+        speed: Math.random() * 0.02 + 0.005,
+        phase: Math.random() * Math.PI * 2,
+        width: Math.random() * 1.2 + 0.6
+      });
+    }
+
+    const getColors = (theme: typeof timeOfDay) => {
+      switch (theme) {
+        case 'predawn':
+          return { line: 'rgba(13, 148, 136, 0.25)', dot: '#0D9488' };
+        case 'sunrise':
+          return { line: 'rgba(219, 39, 119, 0.3)', dot: '#F59E0B' };
+        case 'daytime':
+          return { line: 'rgba(6, 182, 212, 0.3)', dot: '#2563EB' };
+        case 'dusk':
+          return { line: 'rgba(249, 115, 22, 0.35)', dot: '#0891B2' };
+        case 'sunset':
+          return { line: 'rgba(239, 68, 68, 0.3)', dot: '#8B5CF6' };
+        case 'night':
+          return { line: 'rgba(109, 40, 217, 0.2)', dot: '#ffffff' };
+        default:
+          return { line: 'rgba(124, 58, 237, 0.3)', dot: '#06B6D4' };
+      }
+    };
+
+    const render = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height;
+      const themeColors = getColors(timeOfDay);
+
+      const mouseX = heroMousePosRef.current.x;
+      const mouseY = heroMousePosRef.current.y;
+
+      strands.forEach((s) => {
+        s.phase += s.speed;
+        
+        const swayAngle = s.baseAngle + Math.sin(s.phase) * 0.02;
+        const defaultTipX = centerX + Math.cos(swayAngle) * s.length;
+        const defaultTipY = centerY - Math.sin(swayAngle) * s.length;
+
+        let tipX = defaultTipX;
+        let tipY = defaultTipY;
+
+        if (mouseX > -500 && mouseY > -500) {
+          const dx = mouseX - defaultTipX;
+          const dy = mouseY - defaultTipY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 220) {
+            const force = (220 - dist) / 220;
+            tipX += dx * force * 0.45;
+            tipY += dy * force * 0.45;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        const ctrlX = centerX + Math.cos(swayAngle) * (s.length * 0.4);
+        const ctrlY = centerY - Math.sin(swayAngle) * (s.length * 0.4);
+        
+        ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+        ctx.strokeStyle = themeColors.line;
+        ctx.lineWidth = s.width;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, s.width * 2 + 1, 0, Math.PI * 2);
+        ctx.fillStyle = themeColors.dot;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = themeColors.dot;
+        ctx.fill();
+        ctx.restore();
+      });
+
+      if (timeOfDay === 'night') {
+        for (let i = 0; i < 15; i++) {
+          const sx = (Math.sin(Date.now() * 0.001 + i) * 0.5 + 0.5) * canvas.width;
+          const sy = (Math.cos(Date.now() * 0.0007 + i * 2) * 0.4 + 0.4) * canvas.height;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.random() * 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.fill();
+        }
+      }
+
+      animationId = requestAnimationFrame(render);
+    };
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
+    };
+  }, [timeOfDay]);
 
   // 4. Logo Confetti Easter Egg Engine
   const handleLogoClick = () => {
@@ -1336,15 +1477,86 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* About Us (Storytelling) */}
-      <section className="max-w-4xl mx-auto px-6 py-24 text-center border-b border-white/5 relative z-10">
-        <span className="text-xs font-bold text-[#06B6D4] uppercase tracking-widest">Our Mission</span>
-        <blockquote className="text-xl md:text-3xl font-black italic text-white mt-6 leading-snug">
-          "Businesses have always relied on numbers. Numbers explain the past. BusinessVerse AI lets you experience your business as a living ecosystem. Every department becomes interactive. Every decision becomes visual. Every prediction becomes actionable."
-        </blockquote>
-        <p className="text-xs text-text-muted mt-6 max-w-lg mx-auto leading-relaxed">
-          BusinessVerse AI isn't another dashboard. It is your company's Digital Twin. We connect physical bottlenecks to profit margins so you can simulate growth limits before committing cash reserves.
-        </p>
-      </section>
+      {/* About Us (Storytelling) */}
+      <div 
+        className="max-w-7xl mx-auto px-6 py-24 border-b border-white/5 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+      >
+        {/* Left Side: Interactive Canvas Box */}
+        <div 
+          style={{ perspective: 1000 }}
+          className="lg:col-span-6 h-[400px] bg-[#0C1224]/50 border border-white/5 rounded-3xl relative overflow-hidden flex justify-center items-center"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            heroMousePosRef.current = {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top
+            };
+          }}
+          onMouseLeave={() => {
+            heroMousePosRef.current = { x: -1000, y: -1000 };
+          }}
+        >
+          {/* Interactive Sunburst Canvas */}
+          <canvas
+            ref={sunburstCanvasRef}
+            className="absolute inset-0 z-0 pointer-events-none opacity-80"
+          />
+
+          {/* Floating Time of Day dropdown selector */}
+          <div className="absolute top-4 right-6 z-30 flex flex-col items-end">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="px-3 py-1.5 rounded-full bg-black/40 border border-white/10 hover:bg-black/65 transition-colors flex items-center space-x-2 text-[10px] uppercase font-black text-white tracking-wider cursor-pointer focus:outline-none"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Sky Mode: {timeOfDay}</span>
+            </button>
+            
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="mt-1.5 p-1 rounded-xl bg-black/85 backdrop-blur-md border border-white/10 flex flex-col space-y-0.5 min-w-[120px] shadow-2xl z-40"
+                >
+                  {(['predawn', 'sunrise', 'daytime', 'dusk', 'sunset', 'night'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => {
+                        setTimeOfDay(mode);
+                        setDropdownOpen(false);
+                      }}
+                      className={`px-3 py-1.5 text-left rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors cursor-pointer border-none ${
+                        timeOfDay === mode 
+                          ? 'bg-purple-650 text-white' 
+                          : 'text-text-muted hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div className="absolute bottom-4 left-4 p-3 rounded-xl border border-white/5 bg-[#070B17]/85 backdrop-blur-md text-[9px] text-text-muted z-20 pointer-events-none">
+            Move cursor inside this box to warp the sunburst lines.
+          </div>
+        </div>
+
+        {/* Right Side: Our Mission Text */}
+        <div className="lg:col-span-6 space-y-6 text-left relative z-10">
+          <span className="text-xs font-bold text-[#06B6D4] uppercase tracking-widest">Our Mission</span>
+          <blockquote className="text-xl md:text-2xl lg:text-3xl font-black italic text-white leading-snug">
+            "Businesses have always relied on numbers. Numbers explain the past. BusinessVerse AI lets you experience your business as a living ecosystem. Every department becomes interactive. Every decision becomes visual. Every prediction becomes actionable."
+          </blockquote>
+          <p className="text-xs text-text-muted leading-relaxed">
+            BusinessVerse AI isn't another dashboard. It is your company's Digital Twin. We connect physical bottlenecks to profit margins so you can simulate growth limits before committing cash reserves.
+          </p>
+        </div>
+      </div>
 
       {/* Roadmap Section */}
       <section id="roadmap" ref={roadmapSectionRef} className="max-w-7xl mx-auto px-6 py-24 border-b border-white/5 relative z-10">

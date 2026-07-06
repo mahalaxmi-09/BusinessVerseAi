@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -8,6 +8,9 @@ import {
   Network, 
   HelpCircle,
   Play,
+  Pause,
+  Volume2,
+  VolumeX,
   Users,
   ShoppingBag,
   TrendingUp,
@@ -30,6 +33,57 @@ import { useNavigate } from 'react-router-dom';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const [activeClip, setActiveClip] = useState<'clip1' | 'clip2'>('clip1');
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Play/Pause scroll threshold observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (videoRef.current) {
+          if (entry.isIntersecting && isPlaying) {
+            videoRef.current.play().catch(() => {});
+          } else {
+            videoRef.current.pause();
+          }
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeClip, isPlaying]);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
 
   // Redirect to credential login
   const onLaunchDashboard = () => {
@@ -218,14 +272,24 @@ export const LandingPage: React.FC = () => {
               {/* Subtle grid background */}
               <div className="absolute inset-0 bg-[radial-gradient(#151B2D_1px,transparent_1px)] [background-size:16px_16px] opacity-30 z-0" />
               {/* Subtle loading shimmer */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[pulse_4s_infinite] z-0" />
+              {!videoLoaded && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite] z-0" />
+              )}
             </div>
 
-            {/* This is the reserved space for the HTML5 Video tag the user will add manually later */}
-            {/* Styled to cover the card area: absolute inset-0 w-full h-full object-cover rounded-[28px] overflow-hidden */}
-            <div className="absolute inset-0 w-full h-full object-cover rounded-[28px] overflow-hidden z-1 pointer-events-none opacity-0 transition-opacity duration-500">
-              {/* Placeholder text for the developer */}
-              {/* <video src="/path-to-video.mp4" loop muted autoPlay playsInline className="w-full h-full object-cover" /> */}
+            {/* HTML5 video element with activeClip source */}
+            <div className="absolute inset-0 w-full h-full rounded-[28px] overflow-hidden z-1 bg-black">
+              <video
+                ref={videoRef}
+                key={activeClip}
+                src={activeClip === 'clip1' ? '/clip1.mp4' : '/clip2.mp4'}
+                autoPlay
+                muted={isMuted}
+                loop
+                playsInline
+                onLoadedData={() => setVideoLoaded(true)}
+                className="w-full h-full object-cover rounded-[28px] transition-all duration-500"
+              />
             </div>
 
             {/* Content Overlays */}
@@ -235,6 +299,15 @@ export const LandingPage: React.FC = () => {
               <span>BusinessVerse AI Live Demo</span>
             </div>
 
+            {/* Clip Swapping Badge */}
+            <button 
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setActiveClip(activeClip === 'clip1' ? 'clip2' : 'clip1'); }}
+              className="absolute top-4 right-28 z-10 flex items-center space-x-1 bg-purple-650/30 border border-purple-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-purple-300 hover:bg-purple-500/40 transition-all cursor-pointer pointer-events-auto focus:outline-none"
+            >
+              <span>Swap to {activeClip === 'clip1' ? 'Demo Clip' : 'Intro Clip'}</span>
+            </button>
+
             {/* Top Right Live badge */}
             <div className="absolute top-4 right-5 z-10 flex items-center space-x-1.5 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-rose-400 tracking-wider">
               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
@@ -242,11 +315,13 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Center Play Button Overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 space-y-3 pointer-events-none">
-              <div className="w-14 h-14 rounded-full bg-purple-600/20 border border-purple-500/40 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 group-hover:scale-110 group-hover:bg-purple-500/35 group-hover:border-purple-400/60 shadow-[0_0_20px_rgba(124,58,237,0.4)] pointer-events-auto">
-                <Play className="w-5 h-5 fill-current text-white translate-x-[2px]" />
+            {!isPlaying && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 space-y-3 pointer-events-none">
+                <div className="w-14 h-14 rounded-full bg-purple-600/20 border border-purple-500/40 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 hover:scale-110 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
+                  <Play className="w-5 h-5 fill-current text-white translate-x-[2px]" />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Bottom Info Overlay */}
             <div className="absolute bottom-4 left-5 right-5 z-10 flex justify-between items-end pointer-events-none">
@@ -254,9 +329,25 @@ export const LandingPage: React.FC = () => {
                 <div className="text-[11px] font-black text-white tracking-wide">Meet Ava – AI Business Consultant</div>
                 <div className="text-[9px] text-text-muted">Watch a 30-second introduction to BusinessVerse AI</div>
               </div>
-              <div className="text-[9px] font-black text-purple-400 tracking-wider flex items-center space-x-1 bg-purple-950/40 border border-purple-800/30 px-2.5 py-1 rounded-full uppercase">
-                <span>Watch Intro</span>
-                <ArrowRight className="w-3 h-3 ml-0.5" />
+              
+              {/* Custom Controls (Play/Pause & Mute/Unmute) */}
+              <div className="flex items-center space-x-2 pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="p-1.5 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="p-1.5 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                </button>
               </div>
             </div>
 
@@ -266,7 +357,7 @@ export const LandingPage: React.FC = () => {
                 <h4 className="text-sm font-black text-white">Meet Ava</h4>
                 <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your AI Business Consultant</p>
                 <p className="text-[9px] text-text-muted mt-2 leading-relaxed">
-                  Click to hear the introduction
+                  Click the controls to hear the introduction or swap clips
                 </p>
               </div>
             </div>

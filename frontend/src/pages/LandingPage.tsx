@@ -26,21 +26,312 @@ import {
   Check,
   Mail,
   Code,
-  FileCode
+  FileCode,
+  Globe,
+  Sliders,
+  TrendingDown,
+  LineChart
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+
+interface Message {
+  sender: 'user' | 'ai';
+  text: string;
+}
+
+interface WorldCity {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  revenue: string;
+  health: number;
+  satisfaction: number;
+}
+
+interface ConfettiConf {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: string;
+  size: number;
+  rotation: number;
+  rotationSpeed: number;
+}
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
+  // Loading Screen State
+  const [isLoadingScreen, setIsLoadingScreen] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState('Initializing Digital Twin Core...');
+
+  // Confetti Canvas & Easter Egg State
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showEasterEgg, setShowEasterEgg] = useState(false);
+  const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
+  const confettiListRef = useRef<ConfettiConf[]>([]);
+
+  // Background Constellation Canvas
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Presenter video playlist configs
   const [activeClip, setActiveClip] = useState<'clip1' | 'clip2'>('clip1');
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Force autoplay trigger on mount / load / clip swap
+  // Parallax Hero Mouse Movement Offset
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+
+  // Simulation Sliders
+  const [priceMultiplier, setPriceMultiplier] = useState<number>(1.2);
+  const [marketingBudget, setMarketingBudget] = useState<number>(2000);
+  const [simProfit, setSimProfit] = useState<number>(2350);
+  const [simHealth, setSimHealth] = useState<number>(76);
+  const [simAdvice, setSimAdvice] = useState<string>("Optimal profit balance. Healthy user retention active.");
+
+  // AI CEO Chat Timeline States
+  const [chatMessages, setChatMessages] = useState<Message[]>([
+    { sender: 'ai', text: "Hello! I am your AI CEO advisor. Ask me anything about your digital twin's current operations." }
+  ]);
+  const [ceoStatus, setCeoStatus] = useState<'idle' | 'thinking' | 'analyzing' | 'ready' | 'typing'>('idle');
+  const [typedMessage, setTypedMessage] = useState('');
+  const [pendingAdviceCard, setPendingAdviceCard] = useState<boolean>(false);
+
+  // State for active hovered node in ecosystem animation
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Nodes position setup
+  const nodes = [
+    { id: 'CEO', label: 'AI CEO', x: 250, y: 150, details: 'Advising Optimization', color: '#7C3AED' },
+    { id: 'Finance', label: 'Finance', x: 120, y: 80, details: 'Net Cash Flow: $18,200', color: '#06B6D4' },
+    { id: 'Marketing', label: 'Marketing', x: 380, y: 80, details: 'Conversion: 4.8%', color: '#3b82f6' },
+    { id: 'Store', label: 'Digital Store', x: 250, y: 50, details: 'Orders: 156 Units', color: '#10b981' },
+    { id: 'Warehouse', label: 'Warehouse', x: 120, y: 220, details: 'Capacity: 74%', color: '#f59e0b' },
+    { id: 'Inventory', label: 'Inventory', x: 250, y: 250, details: 'Valuation: $8,420', color: '#a855f7' },
+    { id: 'Suppliers', label: 'Suppliers', x: 380, y: 220, details: 'Lead Time: 2.1 days', color: '#ec4899' },
+    { id: 'Employees', label: 'Employees', x: 80, y: 150, details: 'Productivity: 96%', color: '#14b8a6' },
+    { id: 'Customers', label: 'Customers', x: 420, y: 150, details: 'Retention: 92%', color: '#84cc16' }
+  ];
+
+  // Ecosystem Nodes Connections
+  const connections = [
+    { from: 'CEO', to: 'Finance' },
+    { from: 'CEO', to: 'Marketing' },
+    { from: 'CEO', to: 'Store' },
+    { from: 'CEO', to: 'Warehouse' },
+    { from: 'CEO', to: 'Inventory' },
+    { from: 'CEO', to: 'Suppliers' },
+    { from: 'CEO', to: 'Employees' },
+    { from: 'CEO', to: 'Customers' },
+    { from: 'Finance', to: 'Store' },
+    { from: 'Marketing', to: 'Store' },
+    { from: 'Warehouse', to: 'Inventory' },
+    { from: 'Suppliers', to: 'Warehouse' }
+  ];
+
+  // Scroll Timeline Tracker for Roadmap
+  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const roadmapSectionRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: roadmapSectionRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const roadmapProgressSpring = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+
+  // 1. Initial Page Loading Timeline simulation
+  useEffect(() => {
+    const intervals = [
+      { progress: 25, text: 'Mapping transaction pipelines...', delay: 600 },
+      { progress: 50, text: 'Synchronizing warehouse stock telemetry...', delay: 1200 },
+      { progress: 75, text: 'Instantiating Gemini AI Strategy Core...', delay: 1800 },
+      { progress: 100, text: 'Ecosystem twin online ✓', delay: 2400 }
+    ];
+
+    intervals.forEach(item => {
+      setTimeout(() => {
+        setLoadingProgress(item.progress);
+        setLoadingText(item.text);
+      }, item.delay);
+    });
+
+    const completionTimer = setTimeout(() => {
+      setIsLoadingScreen(false);
+    }, 2800);
+
+    return () => {
+      clearTimeout(completionTimer);
+    };
+  }, []);
+
+  // 2. Parallax mouse tracking hook
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX - window.innerWidth / 2) * 0.015;
+      const y = (e.clientY - window.innerHeight / 2) * 0.015;
+      setMouseOffset({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // 3. Background Constellation Network Simulation Canvas
+  useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    if (!canvas) return;
+
+    let animationId: number;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const nodes: Array<{ x: number; y: number; vx: number; vy: number; radius: number }> = [];
+    const nodeCount = 45;
+
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        radius: Math.random() * 1.5 + 0.5
+      });
+    }
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const render = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update and draw nodes
+      nodes.forEach(n => {
+        n.x += n.vx;
+        n.y += n.vy;
+
+        if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+        if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+        ctx.fill();
+      });
+
+      // Draw faint connections
+      for (let i = 0; i < nodeCount; i++) {
+        for (let j = i + 1; j < nodeCount; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 120) {
+            const alpha = (1 - dist / 120) * 0.08;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(124, 58, 237, ${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationId = requestAnimationFrame(render);
+    };
+    render();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+
+  // 4. Logo Confetti Easter Egg Engine
+  const handleLogoClick = () => {
+    setLogoClicks(prev => {
+      if (prev + 1 === 5) {
+        setShowEasterEgg(true);
+        triggerConfettiExplosion();
+        setTimeout(() => setShowEasterEgg(false), 3000);
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
+
+  const triggerConfettiExplosion = () => {
+    const canvas = confettiCanvasRef.current;
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+
+    const colors = ['#7C3AED', '#06B6D4', '#a855f7', '#0891b2', '#c084fc', '#67e8f9'];
+    confettiListRef.current = [];
+
+    // Spawn 120 confetti fragments
+    for (let i = 0; i < 120; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 6 + 4;
+      confettiListRef.current.push({
+        x: window.innerWidth / 2,
+        y: 80, // Logo y-position roughly
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2, // blast vector
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 6 + 4,
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 10
+      });
+    }
+
+    let animationId: number;
+    const updateConfetti = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let activeParticles = 0;
+      confettiListRef.current.forEach(c => {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.15; // gravity pulls down
+        c.vx *= 0.98; // air drag resistance
+        c.rotation += c.rotationSpeed;
+
+        if (c.y < canvas.height && c.x > 0 && c.x < canvas.width) {
+          activeParticles++;
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate((c.rotation * Math.PI) / 180);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+          ctx.restore();
+        }
+      });
+
+      if (activeParticles > 0) {
+        animationId = requestAnimationFrame(updateConfetti);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    };
+    updateConfetti();
+  };
+
+  // 5. Presenter Video autoplay and observations
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = true;
@@ -50,12 +341,10 @@ export const LandingPage: React.FC = () => {
     }
   }, [activeClip, videoLoaded]);
 
-  // Play/Pause scroll threshold observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (videoRef.current) {
-          // Pause only if it goes completely offscreen
           if (entry.isIntersecting && isPlaying) {
             videoRef.current.play().catch(() => {});
           } else if (!entry.isIntersecting) {
@@ -108,21 +397,18 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Redirect to credential login
+  const handleVideoEnded = () => {
+    if (activeClip === 'clip1') {
+      setActiveClip('clip2');
+    }
+  };
+
   const onLaunchDashboard = () => {
     navigate('/login');
   };
 
-  // State for interactive simulation showcase
-  const [priceMultiplier, setPriceMultiplier] = useState<number>(1.2);
-  const [marketingBudget, setMarketingBudget] = useState<number>(2000);
-  const [simProfit, setSimProfit] = useState<number>(2350);
-  const [simHealth, setSimHealth] = useState<number>(76);
-  const [simAdvice, setSimAdvice] = useState<string>("Optimal profit balance. Healthy user retention active.");
-
-  // Recalculate simulation values on slider changes
+  // 6. Simulation Sandbox state calculations
   useEffect(() => {
-    // Basic business equations for the preview interaction
     const calculatedRevenue = Math.round(15000 + (marketingBudget * 3.5) - (priceMultiplier - 1.2) * 8000);
     const calculatedProfit = Math.round(calculatedRevenue * 0.45 - (marketingBudget * 0.8));
     const calculatedHealth = Math.min(100, Math.max(30, Math.round(85 - (priceMultiplier - 1.0) * 35 + (marketingBudget / 1000) * 4)));
@@ -139,74 +425,141 @@ export const LandingPage: React.FC = () => {
     }
   }, [priceMultiplier, marketingBudget]);
 
-  // State for Interactive AI CEO Chatbot simulator
-  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
-    { sender: 'ai', text: "Hello! I am your AI CEO advisor. Ask me anything about your digital twin's current operations." }
-  ]);
-  const [isTyping, setIsTyping] = useState<boolean>(false);
-
+  // 7. AI CEO Multi-state thinking simulator
   const triggerChatResponse = (prompt: string, responseText: string) => {
-    if (isTyping) return;
+    if (ceoStatus !== 'idle') return;
+    
+    // Add user prompt
     setChatMessages(prev => [...prev, { sender: 'user', text: prompt }]);
-    setIsTyping(true);
+    setPendingAdviceCard(false);
+    setCeoStatus('thinking');
 
+    // State 1: Thinking...
     setTimeout(() => {
-      setIsTyping(false);
-      setChatMessages(prev => [...prev, { sender: 'ai', text: responseText }]);
-    }, 1500);
+      setCeoStatus('analyzing');
+      
+      // State 2: Analyzing...
+      setTimeout(() => {
+        setCeoStatus('ready');
+        
+        // State 3: Ready! Type reply out letter-by-letter
+        setTimeout(() => {
+          setCeoStatus('typing');
+          let currentText = '';
+          let charIndex = 0;
+          
+          const typingInterval = setInterval(() => {
+            currentText += responseText[charIndex];
+            setTypedMessage(currentText);
+            charIndex++;
+            
+            if (charIndex >= responseText.length) {
+              clearInterval(typingInterval);
+              setChatMessages(prev => [...prev, { sender: 'ai', text: responseText }]);
+              setTypedMessage('');
+              setCeoStatus('idle');
+              setPendingAdviceCard(true); // display slide-in advice button override card
+            }
+          }, 25); // Speed of typing letters
+          
+        }, 1000);
+      }, 1400);
+    }, 1200);
   };
 
-  // State for active hovered node in ecosystem animation
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-
-  // Nodes position setup
-  const nodes = [
-    { id: 'CEO', label: 'AI CEO', x: 250, y: 150, details: 'Advising Optimization', color: '#7C3AED' },
-    { id: 'Finance', label: 'Finance', x: 120, y: 80, details: 'Net Cash Flow: $18,200', color: '#06B6D4' },
-    { id: 'Marketing', label: 'Marketing', x: 380, y: 80, details: 'Conversion: 4.8%', color: '#3b82f6' },
-    { id: 'Store', label: 'Digital Store', x: 250, y: 50, details: 'Orders: 156 Units', color: '#10b981' },
-    { id: 'Warehouse', label: 'Warehouse', x: 120, y: 220, details: 'Capacity: 74%', color: '#f59e0b' },
-    { id: 'Inventory', label: 'Inventory', x: 250, y: 250, details: 'Valuation: $8,420', color: '#a855f7' },
-    { id: 'Suppliers', label: 'Suppliers', x: 380, y: 220, details: 'Lead Time: 2.1 days', color: '#ec4899' },
-    { id: 'Employees', label: 'Employees', x: 80, y: 150, details: 'Productivity: 96%', color: '#14b8a6' },
-    { id: 'Customers', label: 'Customers', x: 420, y: 150, details: 'Retention: 92%', color: '#84cc16' }
-  ];
-
-  // Connections map
-  const connections = [
-    { from: 'Store', to: 'CEO' },
-    { from: 'Finance', to: 'CEO' },
-    { from: 'Marketing', to: 'CEO' },
-    { from: 'Warehouse', to: 'CEO' },
-    { from: 'Inventory', to: 'CEO' },
-    { from: 'Suppliers', to: 'Warehouse' },
-    { from: 'Employees', to: 'Warehouse' },
-    { from: 'Customers', to: 'Store' },
-    { from: 'Marketing', to: 'Customers' }
-  ];
-
   return (
-    <div className="w-full bg-[#070B17] text-text-white relative overflow-hidden select-none font-sans min-h-screen">
-      {/* Background radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-purple-900/10 rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="absolute top-[40%] right-10 w-[600px] h-[600px] bg-cyan-900/10 rounded-full blur-[120px] pointer-events-none z-0" />
+    <div ref={pageContainerRef} className="min-h-screen bg-[#09090B] relative overflow-x-hidden text-text-white select-none font-sans">
       
-      {/* Laser Light Rays */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
-        <div className="absolute w-[2px] h-[400px] bg-gradient-to-b from-purple-500/0 via-purple-500/25 to-purple-500/0 blur-[1px] rotate-45 left-[20%] top-[-10%] animate-[pulse_6s_ease-in-out_infinite]" />
-        <div className="absolute w-[2px] h-[500px] bg-gradient-to-b from-cyan-500/0 via-cyan-500/20 to-cyan-500/0 blur-[1px] -rotate-45 right-[20%] top-[10%] animate-[pulse_8s_ease-in-out_infinite]" />
+      {/* 1. Custom AI Loading Screen Overlay */}
+      <AnimatePresence>
+        {isLoadingScreen && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -40 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 bg-[#09090B] z-[9999] flex flex-col items-center justify-center space-y-6"
+          >
+            {/* Spinning CPU Grid Logo */}
+            <div className="relative">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                className="h-16 w-16 rounded-2xl border border-purple-500/25 flex items-center justify-center text-purple-400 bg-purple-950/10 shadow-[0_0_20px_rgba(124,58,237,0.15)]"
+              >
+                <Cpu className="w-8 h-8" />
+              </motion.div>
+              <div className="absolute inset-0 rounded-2xl border border-cyan-400/20 animate-ping scale-110" />
+            </div>
+
+            {/* Title */}
+            <div className="text-center space-y-2 max-w-xs">
+              <h3 className="text-sm font-black text-white uppercase tracking-widest">BusinessVerse AI</h3>
+              <p className="text-[9px] text-[#06B6D4] font-bold uppercase tracking-wider h-4 animate-pulse">
+                {loadingText}
+              </p>
+            </div>
+
+            {/* Glowing progress meter */}
+            <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden relative">
+              <motion.div 
+                style={{ width: `${loadingProgress}%` }}
+                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-500 to-cyan-400 shadow-[0_0_8px_#06B6D4]"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. Confetti Canvas Overlay (Easter Egg) */}
+      <canvas
+        ref={confettiCanvasRef}
+        className="fixed inset-0 pointer-events-none z-[9990]"
+      />
+
+      {/* Easter Egg floating indicator popup */}
+      <AnimatePresence>
+        {showEasterEgg && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 px-6 py-2.5 rounded-full border border-purple-500 bg-purple-950/80 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center space-x-2 shadow-[0_0_25px_rgba(168,85,247,0.5)] z-[9980]"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-300 animate-bounce" />
+            <span>🚀 AI Mode Activated</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. Nebula Constellation Canvas Background */}
+      <canvas
+        ref={bgCanvasRef}
+        className="fixed inset-0 pointer-events-none z-0"
+      />
+
+      {/* Soft floating background light beams (aurora) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-purple-900/10 rounded-full blur-[140px] animate-[pulse_10s_infinite_alternate]" />
+        <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-cyan-900/10 rounded-full blur-[140px] animate-[pulse_8s_infinite_alternate]" />
       </div>
 
-      {/* Modern Header */}
-      <header className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center relative z-20 border-b border-white/5 bg-[#070B17]/60 backdrop-blur-md sticky top-0">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      {/* Slow-Panning Animated Grid */}
+      <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.007)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.007)_1px,transparent_1px)] bg-[size:45px_45px] opacity-60 z-0 animate-[shimmer_15s_linear_infinite]" />
+
+      {/* Header bar */}
+      <header className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center z-20 relative select-none">
+        <div 
+          onClick={handleLogoClick}
+          className="flex items-center space-x-2.5 cursor-pointer active:scale-95 transition-transform"
+          title="Click 5 times for a secret mode!"
+        >
           <div className="p-1.5 rounded-lg bg-purple-650/15 border border-purple-500/20 text-purple-400">
-            <Cpu className="w-5.5 h-5.5 animate-pulse" />
+            <Cpu className="w-5 h-5" />
           </div>
-          <span className="font-extrabold tracking-tight text-lg text-white">BusinessVerse <span className="text-[#06B6D4]">AI</span></span>
+          <span className="font-extrabold text-sm tracking-tight text-white">BusinessVerse <span className="text-[#06B6D4]">AI</span></span>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-8 text-xs font-semibold text-text-muted">
+        <nav className="hidden md:flex items-center space-x-8 text-[10px] uppercase font-black tracking-wider text-text-muted">
           <a href="#ecosystem" className="hover:text-text-white transition-colors">Ecosystem</a>
           <a href="#problem" className="hover:text-text-white transition-colors">Digital Twin</a>
           <a href="#simulation" className="hover:text-text-white transition-colors">Simulations</a>
@@ -225,15 +578,35 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 pt-16 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-        <div className="lg:col-span-7 space-y-7">
+        
+        {/* Left Side: Parallax Typography and Button Slides */}
+        <motion.div 
+          style={{ x: mouseOffset.x, y: mouseOffset.y }}
+          className="lg:col-span-7 space-y-7"
+        >
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[11px] font-extrabold tracking-wide">
             <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin-slow" />
             <span>Enterprise Decision Intelligence Engine</span>
           </div>
 
+          {/* Staggered Line-by-Line Title Reveal */}
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tight text-white leading-[1.05]">
-            See Your <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-400">Business Alive.</span>
+            <motion.span 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="block"
+            >
+              See Your
+            </motion.span>
+            <motion.span 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="block bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-indigo-300 to-cyan-400"
+            >
+              Business Alive.
+            </motion.span>
           </h1>
 
           <p className="text-sm md:text-base text-text-muted max-w-xl leading-relaxed">
@@ -259,51 +632,48 @@ export const LandingPage: React.FC = () => {
 
           {/* Counts metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-10 border-t border-white/5">
-            <div>
+            <motion.div whileHover={{ y: -4, scale: 1.05 }} className="cursor-default transition-all duration-200">
               <div className="text-2xl font-black text-white">$1.2M+</div>
               <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider mt-1">Simulated Profits</div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div whileHover={{ y: -4, scale: 1.05 }} className="cursor-default transition-all duration-200">
               <div className="text-2xl font-black text-white">10 Nodes</div>
               <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider mt-1">Ecosystem Grid</div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div whileHover={{ y: -4, scale: 1.05 }} className="cursor-default transition-all duration-200">
               <div className="text-2xl font-black text-white">50+ Models</div>
               <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider mt-1">Decision Levers</div>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div whileHover={{ y: -4, scale: 1.05 }} className="cursor-default transition-all duration-200">
               <div className="text-2xl font-black text-white">98% Accuracy</div>
               <div className="text-[10px] text-text-muted uppercase font-bold tracking-wider mt-1">AI Projections</div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Premium AI Presenter Video Showcase Card */}
+        {/* Right Side: Widescreen Presenter Video Showcase Card */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          whileHover={{ rotateY: mouseOffset.x * 0.8, rotateX: -mouseOffset.y * 0.8 }}
           className="lg:col-span-5 w-full flex justify-center items-center relative z-10"
         >
-          {/* Card Container with custom border radius, glass background, purple glow border, and soft shadows */}
+          {/* Card Container */}
           <div 
             onClick={handleCardClick}
             className="w-full aspect-[16/9] rounded-[28px] bg-gradient-to-br from-[#101828]/95 to-[#070B17]/95 border border-purple-500/30 p-[1px] shadow-[0_0_30px_rgba(124,58,237,0.25)] relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:border-purple-400/50 hover:shadow-[0_0_40px_rgba(124,58,237,0.4)] group cursor-pointer flex flex-col justify-between"
           >
             
-            {/* Ambient background glow inside the card */}
+            {/* Shimmer loading container */}
             <div className="absolute inset-0 bg-[#070B17] rounded-[28px] overflow-hidden">
-              {/* Animated light rays/mesh */}
               <div className="absolute inset-0 bg-gradient-to-tr from-purple-950/20 via-cyan-950/10 to-transparent opacity-60 z-0" />
-              {/* Subtle grid background */}
-              <div className="absolute inset-0 bg-[radial-gradient(#151B2D_1px,transparent_1px)] [background-size:16px_16px] opacity-30 z-0" />
-              {/* Subtle loading shimmer */}
               {!videoLoaded && (
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite] z-0" />
               )}
             </div>
 
-            {/* HTML5 video element with activeClip source */}
+            {/* Video component */}
             <div className="absolute inset-0 w-full h-full rounded-[28px] overflow-hidden z-1 bg-black">
               <video
                 ref={videoRef}
@@ -311,58 +681,47 @@ export const LandingPage: React.FC = () => {
                 src={activeClip === 'clip1' ? '/videos/clip1.mp4' : '/videos/clip2.mp4'}
                 autoPlay
                 muted
-                loop
                 playsInline
                 onLoadedData={() => setVideoLoaded(true)}
-                className="w-full h-full object-cover rounded-[28px] transition-all duration-500"
+                onEnded={handleVideoEnded}
+                className="w-full h-full object-cover rounded-[28px] transition-all duration-500 scale-[1.01] group-hover:scale-105"
               />
             </div>
 
-            {/* Content Overlays */}
+            {/* Overlays */}
             {/* Top Left Label */}
-            <div className="absolute top-4 left-5 z-10 flex items-center space-x-1.5 bg-black/40 border border-white/5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-white tracking-wider">
+            <div className="absolute top-4 left-5 z-30 flex items-center space-x-1.5 bg-black/40 border border-white/5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-white tracking-wider">
               <span className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
               <span>BusinessVerse AI Live Demo</span>
             </div>
 
-            {/* Clip Swapping Badge */}
+            {/* Clip Swapper */}
             <button 
               type="button"
               onClick={(e) => { e.stopPropagation(); setActiveClip(activeClip === 'clip1' ? 'clip2' : 'clip1'); }}
-              className="absolute top-4 right-28 z-10 flex items-center space-x-1 bg-purple-650/30 border border-purple-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-purple-300 hover:bg-purple-500/40 transition-all cursor-pointer pointer-events-auto focus:outline-none"
+              className="absolute top-4 right-28 z-30 flex items-center space-x-1 bg-purple-650/30 border border-purple-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-purple-300 hover:bg-purple-500/40 transition-all cursor-pointer pointer-events-auto focus:outline-none"
             >
               <span>Swap to {activeClip === 'clip1' ? 'Demo Clip' : 'Intro Clip'}</span>
             </button>
 
-            {/* Top Right Live badge */}
-            <div className="absolute top-4 right-5 z-10 flex items-center space-x-1.5 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-rose-400 tracking-wider">
+            {/* Live Presentation badge */}
+            <div className="absolute top-4 right-5 z-30 flex items-center space-x-1.5 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase text-rose-400 tracking-wider">
               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
               <span>Live Presentation</span>
             </div>
 
-            {/* Center Play Button Overlay */}
-            {!isPlaying && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 space-y-3 pointer-events-none">
-                <div className="w-14 h-14 rounded-full bg-purple-600/20 border border-purple-500/40 backdrop-blur-md flex items-center justify-center text-white transition-all duration-300 hover:scale-110 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
-                  <Play className="w-5 h-5 fill-current text-white translate-x-[2px]" />
-                </div>
-              </div>
-            )}
-
-            {/* Bottom Info Overlay */}
-            <div className="absolute bottom-4 left-5 right-5 z-10 flex justify-between items-end pointer-events-none">
+            {/* Custom controls */}
+            <div className="absolute bottom-4 left-5 right-5 z-30 flex justify-between items-end pointer-events-none">
               <div className="space-y-0.5">
                 <div className="text-[11px] font-black text-white tracking-wide">Meet Ava – AI Business Consultant</div>
                 <div className="text-[9px] text-text-muted">Watch a 30-second introduction to BusinessVerse AI</div>
               </div>
               
-              {/* Custom Controls (Play/Pause & Mute/Unmute) */}
               <div className="flex items-center space-x-2 pointer-events-auto">
                 <button
                   type="button"
                   onClick={togglePlay}
                   className="p-1.5 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
-                  title={isPlaying ? "Pause" : "Play"}
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 </button>
@@ -370,7 +729,6 @@ export const LandingPage: React.FC = () => {
                   type="button"
                   onClick={toggleMute}
                   className="p-1.5 rounded-lg bg-black/40 border border-white/10 text-white hover:bg-black/60 transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
-                  title={isMuted ? "Unmute" : "Mute"}
                 >
                   {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                 </button>
@@ -379,7 +737,7 @@ export const LandingPage: React.FC = () => {
 
             {/* Hover overlay text block */}
             <div className="absolute inset-0 bg-[#070B17]/75 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-6 text-center z-20 rounded-[28px]">
-              <div className="space-y-1 max-w-xs">
+              <div className="space-y-1 max-w-xs text-center pointer-events-none">
                 <h4 className="text-sm font-black text-white">Meet Ava</h4>
                 <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your AI Business Consultant</p>
                 <p className="text-[9px] text-text-muted mt-2 leading-relaxed">
@@ -387,7 +745,6 @@ export const LandingPage: React.FC = () => {
                 </p>
               </div>
             </div>
-
           </div>
         </motion.div>
       </section>
@@ -395,16 +752,15 @@ export const LandingPage: React.FC = () => {
       {/* Trusted Companies Marquee */}
       <section className="w-full border-t border-b border-white/5 py-8 bg-[#080D1D]/40 relative z-10">
         <div className="max-w-7xl mx-auto px-6 overflow-hidden relative">
-          {/* Gradient fade edge masks */}
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#070B17] to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#070B17] to-transparent z-10 pointer-events-none" />
           
-          <div className="flex items-center justify-center space-x-12 animate-[marquee_25s_linear_infinite] whitespace-nowrap">
+          <div className="flex items-center justify-center space-x-12 animate-[marquee_25s_linear_infinite] whitespace-nowrap hover:[animation-play-state:paused]">
             {[
               "ACME CORPORATE", "GLOBEX SOLUTIONS", "INITECH INDUSTRIES", "UMBRELLA LABS", 
               "STARK INDUSTRIES", "WAYNE ENTERPRISES", "CYBERDYNE INC", "TYRELL BIOTECH"
             ].map((company, idx) => (
-              <span key={idx} className="text-xs font-black tracking-widest text-text-muted hover:text-white transition-colors cursor-default select-none mx-6">
+              <span key={idx} className="text-xs font-black tracking-widest text-text-muted hover:text-purple-400 transition-colors duration-250 cursor-default select-none mx-6">
                 ⚡ {company}
               </span>
             ))}
@@ -442,34 +798,40 @@ export const LandingPage: React.FC = () => {
                       d={`M ${fromNode.x} ${fromNode.y} C ${(fromNode.x + toNode.x)/2} ${fromNode.y}, ${(fromNode.x + toNode.x)/2} ${toNode.y}, ${toNode.x} ${toNode.y}`}
                       fill="none"
                       stroke={isPathActive ? '#7C3AED' : '#1e293b'}
-                      strokeWidth={isPathActive ? '2' : '1'}
-                      className="transition-all duration-300"
+                      strokeWidth={isPathActive ? '1.5' : '1'}
+                      className={isPathActive ? 'animate-[dash_10s_linear_infinite]' : ''}
+                      strokeDasharray={isPathActive ? '4 4' : 'none'}
                     />
-                    {/* Flowing particle packets */}
-                    <path
-                      d={`M ${fromNode.x} ${fromNode.y} C ${(fromNode.x + toNode.x)/2} ${fromNode.y}, ${(fromNode.x + toNode.x)/2} ${toNode.y}, ${toNode.x} ${toNode.y}`}
-                      fill="none"
-                      stroke={fromNode.color}
-                      strokeWidth="2"
-                      strokeDasharray="4, 12"
-                      className="animate-[dash_4s_linear_infinite]"
-                      opacity={isPathActive ? "0.9" : "0.3"}
-                    />
+                    {/* Pulsing data packets traveling along paths */}
+                    {isPathActive && (
+                      <circle r="2.5" fill="#06B6D4">
+                        <animateMotion
+                          dur="3s"
+                          repeatCount="indefinite"
+                          path={`M ${fromNode.x} ${fromNode.y} C ${(fromNode.x + toNode.x)/2} ${fromNode.y}, ${(fromNode.x + toNode.x)/2} ${toNode.y}, ${toNode.x} ${toNode.y}`}
+                        />
+                      </circle>
+                    )}
                   </g>
                 );
               })}
             </svg>
 
-            {/* Render Node capsules */}
+            {/* Render nodes */}
             {nodes.map((node) => {
               const isActive = hoveredNode === node.id;
               return (
                 <div
                   key={node.id}
-                  style={{ left: `${node.x - 55}px`, top: `${node.y - 18}px` }}
+                  style={{
+                    position: 'absolute',
+                    left: `${node.x}px`,
+                    top: `${node.y}px`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
                   onMouseEnter={() => setHoveredNode(node.id)}
                   onMouseLeave={() => setHoveredNode(null)}
-                  className={`absolute w-[110px] py-1 px-2.5 rounded-full border text-center cursor-pointer transition-all duration-300 select-none z-10 flex flex-col items-center justify-center ${
+                  className={`px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase transition-all duration-300 cursor-pointer z-10 ${
                     isActive 
                       ? 'bg-purple-950/60 border-purple-400 shadow-[0_0_15px_rgba(124,58,237,0.3)] scale-105' 
                       : 'bg-[#151B2D]/80 border-white/10'
@@ -493,7 +855,7 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Text: Ecosystem description */}
+          {/* Right Text */}
           <div className="lg:col-span-5 space-y-5">
             <h3 className="text-xl font-bold text-white">Full-Fidelity Operational Twin</h3>
             <p className="text-xs text-text-muted leading-relaxed">
@@ -518,7 +880,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Problem & Solution Comparison (Storytelling) */}
+      {/* Problem & Solution Comparison */}
       <section id="problem" className="max-w-7xl mx-auto px-6 py-24 border-b border-white/5 relative z-10">
         <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-bold text-rose-400 uppercase tracking-widest">The Paradigm Shift</span>
@@ -528,7 +890,11 @@ export const LandingPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Static Past Card */}
-          <div className="p-8 rounded-3xl border border-rose-500/10 bg-gradient-to-b from-rose-950/5 to-rose-950/10 space-y-6">
+          <motion.div 
+            whileHover={{ y: -8, scale: 1.02, borderColor: 'rgba(239, 68, 68, 0.3)', boxShadow: '0 20px 45px rgba(239, 68, 68, 0.1)' }}
+            transition={{ type: 'spring', damping: 22, stiffness: 200 }}
+            className="p-8 rounded-3xl border border-rose-500/10 bg-gradient-to-b from-rose-950/5 to-rose-950/10 space-y-6 transition-all duration-300 cursor-default"
+          >
             <div className="inline-flex p-3 rounded-2xl bg-rose-500/10 text-rose-400">
               <FileText className="w-6 h-6" />
             </div>
@@ -550,10 +916,14 @@ export const LandingPage: React.FC = () => {
                 <span>Siloed, disconnected department operations</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Living Digital Twin Card */}
-          <div className="p-8 rounded-3xl border border-emerald-500/10 bg-gradient-to-b from-emerald-950/5 to-emerald-950/10 space-y-6">
+          <motion.div 
+            whileHover={{ y: -8, scale: 1.02, borderColor: 'rgba(16, 185, 129, 0.3)', boxShadow: '0 20px 45px rgba(16, 185, 129, 0.1)' }}
+            transition={{ type: 'spring', damping: 22, stiffness: 200 }}
+            className="p-8 rounded-3xl border border-emerald-500/10 bg-gradient-to-b from-emerald-950/5 to-emerald-950/10 space-y-6 transition-all duration-300 cursor-default"
+          >
             <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 text-emerald-400">
               <Brain className="w-6 h-6" />
             </div>
@@ -575,7 +945,7 @@ export const LandingPage: React.FC = () => {
                 <span>Prescriptive AI CEO text advisory reports</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -594,11 +964,16 @@ export const LandingPage: React.FC = () => {
             { step: "04", name: "Recommend", desc: "Gemini AI parses performance parameters to recommend budget overrides." },
             { step: "05", name: "Grow", desc: "Unlock optimized pricing elasticities and expand client footprints." }
           ].map((item, idx) => (
-            <div key={idx} className="p-6 rounded-2xl border border-white/5 bg-[#0A1021]/80 hover:border-purple-500/30 transition-all duration-300 relative group">
+            <motion.div 
+              key={idx} 
+              whileHover={{ y: -6, scale: 1.03, borderColor: 'rgba(168, 85, 247, 0.3)', boxShadow: '0 15px 30px rgba(168, 85, 247, 0.1)' }}
+              transition={{ type: 'spring', damping: 20, stiffness: 220 }}
+              className="p-6 rounded-2xl border border-white/5 bg-[#0A1021]/80 transition-all duration-300 relative group cursor-default"
+            >
               <div className="text-2xl font-black text-purple-500/30 group-hover:text-purple-400 transition-colors duration-300">{item.step}</div>
               <h4 className="text-xs font-bold text-white mt-3 uppercase tracking-wider">{item.name}</h4>
               <p className="text-[10px] text-text-muted mt-2 leading-relaxed">{item.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -616,9 +991,12 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Controls & Visual Live Output */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 backdrop-blur-md space-y-6">
+            <motion.div 
+              whileHover={{ y: -4, borderColor: 'rgba(255, 255, 255, 0.1)', boxShadow: '0 15px 30px rgba(12, 18, 36, 0.3)' }}
+              className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 backdrop-blur-md space-y-6 transition-all duration-300"
+            >
               <h3 className="text-sm font-black text-white uppercase tracking-wider pb-3 border-b border-white/5 flex items-center space-x-2">
-                <SlidersIcon className="w-4 h-4 text-purple-400" />
+                <Sliders className="w-4 h-4 text-purple-400" />
                 <span>Simulation Controls</span>
               </h3>
 
@@ -663,12 +1041,15 @@ export const LandingPage: React.FC = () => {
                   <span>$5,000 (Aggressive expansion)</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Right Metrics Display Card */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="p-6 rounded-3xl border border-white/5 bg-[#151B2D]/40 space-y-5">
+            <motion.div 
+              whileHover={{ y: -4, borderColor: 'rgba(255, 255, 255, 0.1)' }}
+              className="p-6 rounded-3xl border border-white/5 bg-[#151B2D]/40 space-y-5 transition-all duration-300"
+            >
               <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center space-x-2">
                 <Activity className="w-4 h-4 text-emerald-400" />
                 <span>Simulated Outcomes</span>
@@ -676,16 +1057,22 @@ export const LandingPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Net Profit Metric */}
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="p-4 rounded-2xl bg-black/40 border border-white/5 transition-all cursor-default"
+                >
                   <div className="text-[10px] text-text-muted font-bold uppercase">Projected Net Profit</div>
                   <div className="text-xl font-black text-emerald-400 mt-1">${simProfit.toLocaleString()}</div>
-                </div>
+                </motion.div>
 
                 {/* Health Metric */}
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="p-4 rounded-2xl bg-black/40 border border-white/5 transition-all cursor-default"
+                >
                   <div className="text-[10px] text-text-muted font-bold uppercase">Customer Health</div>
                   <div className="text-xl font-black text-white mt-1">{simHealth}/100</div>
-                </div>
+                </motion.div>
               </div>
 
               {/* Live AI CEO commentary */}
@@ -698,7 +1085,7 @@ export const LandingPage: React.FC = () => {
                   {simAdvice}
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -721,7 +1108,7 @@ export const LandingPage: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => triggerChatResponse(item.prompt, item.response)}
-                  className="w-full p-3 rounded-xl border border-white/5 bg-[#151B2D]/40 text-[10px] text-left hover:border-purple-500/40 hover:text-white transition-all cursor-pointer flex justify-between items-center"
+                  className="w-full p-3.5 rounded-xl border border-white/5 bg-[#151B2D]/40 text-[10px] text-left hover:border-purple-500/40 hover:text-white transition-all cursor-pointer flex justify-between items-center"
                 >
                   <span>"{item.prompt}"</span>
                   <ArrowUpRight className="w-3.5 h-3.5 text-purple-400 shrink-0" />
@@ -732,7 +1119,9 @@ export const LandingPage: React.FC = () => {
 
           {/* Right Console: Typing Chatbot Simulator */}
           <div className="lg:col-span-7">
-            <div className="p-5 rounded-3xl border border-white/5 bg-[#0C1224]/60 backdrop-blur-md space-y-4 max-h-[350px] overflow-y-auto flex flex-col justify-between h-[320px]">
+            <div className="p-5 rounded-3xl border border-white/5 bg-[#0C1224]/60 backdrop-blur-md space-y-4 max-h-[380px] overflow-y-auto flex flex-col justify-between h-[340px] relative">
+              
+              {/* Inner messaging logs */}
               <div className="space-y-3 flex-1 overflow-y-auto pr-2">
                 <AnimatePresence>
                   {chatMessages.map((msg, idx) => (
@@ -753,19 +1142,74 @@ export const LandingPage: React.FC = () => {
                   ))}
                 </AnimatePresence>
 
-                {isTyping && (
+                {/* Simulated Multistate thinking overlay */}
+                {ceoStatus === 'thinking' && (
                   <div className="flex justify-start">
-                    <div className="p-3 rounded-2xl bg-[#151B2D] text-text-muted rounded-bl-none border border-white/5 text-[9px] flex items-center space-x-1.5">
-                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" />
-                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                      <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    <div className="p-3 rounded-2xl bg-[#151B2D] text-[#a855f7] rounded-bl-none border border-white/5 text-[9px] flex items-center space-x-2 font-bold uppercase tracking-wider animate-pulse">
+                      <Brain className="w-3.5 h-3.5 animate-spin" />
+                      <span>Thinking...</span>
+                    </div>
+                  </div>
+                )}
+
+                {ceoStatus === 'analyzing' && (
+                  <div className="flex justify-start">
+                    <div className="p-3 rounded-2xl bg-[#151B2D] text-[#06B6D4] rounded-bl-none border border-white/5 text-[9px] flex items-center space-x-2 font-bold uppercase tracking-wider animate-pulse">
+                      <Activity className="w-3.5 h-3.5 animate-bounce" />
+                      <span>Analyzing telemetry...</span>
+                    </div>
+                  </div>
+                )}
+
+                {ceoStatus === 'ready' && (
+                  <div className="flex justify-start">
+                    <div className="p-3 rounded-2xl bg-[#151B2D] text-emerald-400 rounded-bl-none border border-emerald-500/10 text-[9px] flex items-center space-x-2 font-bold uppercase tracking-wider">
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Recommendation Ready ✓</span>
+                    </div>
+                  </div>
+                )}
+
+                {ceoStatus === 'typing' && (
+                  <div className="flex justify-start">
+                    <div className="p-3 rounded-2xl bg-[#151B2D] text-text-muted rounded-bl-none border border-white/5 text-[10px] leading-relaxed">
+                      {typedMessage}
+                      <span className="inline-block w-1.5 h-3 bg-purple-400 ml-0.5 animate-pulse" />
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="pt-3 border-t border-white/5 text-[9px] text-text-muted flex justify-between items-center">
-                <span>AI CEO Engine: Gemini Pro active node.</span>
+              {/* Slide-in override card triggers when message completed */}
+              <AnimatePresence>
+                {pendingAdviceCard && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-950/10 flex items-center justify-between text-[9px] text-emerald-300 font-bold uppercase tracking-wide"
+                  >
+                    <span>Strategic Override coordinates mapped.</span>
+                    <button 
+                      onClick={() => {
+                        setPriceMultiplier(1.4);
+                        setMarketingBudget(3500);
+                        setPendingAdviceCard(false);
+                        alert('Sliders synchronized to AI recommendation parameters!');
+                      }}
+                      className="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[8px] cursor-pointer border-none"
+                    >
+                      Apply Override
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="pt-3 border-t border-white/5 text-[9px] text-text-muted flex justify-between items-center shrink-0 select-none">
+                <span className="flex items-center space-x-1">
+                  <Brain className={`w-3.5 h-3.5 mr-1 ${ceoStatus !== 'idle' ? 'text-purple-400 animate-pulse' : 'text-text-muted'}`} />
+                  <span>AI CEO Engine: Gemini Pro active node.</span>
+                </span>
                 <span className="flex items-center space-x-1"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" /><span>Online</span></span>
               </div>
             </div>
@@ -783,14 +1227,21 @@ export const LandingPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Revenue Chart Box */}
-          <div className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 space-y-4">
+          <motion.div 
+            whileHover={{ y: -6, scale: 1.01, borderColor: 'rgba(124, 58, 237, 0.3)', boxShadow: '0 15px 30px rgba(124, 58, 237, 0.1)' }}
+            className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 space-y-4 transition-all duration-300"
+          >
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <span className="text-xs font-black text-white uppercase tracking-wider">Gross Sales Velocity</span>
               <span className="text-[10px] text-emerald-400 font-extrabold">↑ 18.5% YoY</span>
             </div>
             <div className="h-44 w-full relative">
               <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                <path
+                <motion.path
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.8, ease: 'easeOut' }}
                   d="M 0,38 Q 15,10 30,28 T 60,12 T 90,32 T 100,5"
                   fill="none"
                   stroke="#7C3AED"
@@ -809,17 +1260,24 @@ export const LandingPage: React.FC = () => {
                 </defs>
               </svg>
             </div>
-          </div>
+          </motion.div>
 
           {/* Business Health Chart Box */}
-          <div className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 space-y-4">
+          <motion.div 
+            whileHover={{ y: -6, scale: 1.01, borderColor: 'rgba(6, 182, 212, 0.3)', boxShadow: '0 15px 30px rgba(6, 182, 212, 0.1)' }}
+            className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 space-y-4 transition-all duration-300"
+          >
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <span className="text-xs font-black text-white uppercase tracking-wider">Satisfaction Index Tracker</span>
               <span className="text-[10px] text-amber-500 font-extrabold">Stable (94/100)</span>
             </div>
             <div className="h-44 w-full relative">
               <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                <path
+                <motion.path
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.8, ease: 'easeOut' }}
                   d="M 0,22 Q 25,12 50,30 T 100,8"
                   fill="none"
                   stroke="#06B6D4"
@@ -838,7 +1296,7 @@ export const LandingPage: React.FC = () => {
                 </defs>
               </svg>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -853,7 +1311,7 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { title: "AI CEO Co-Pilot", desc: "Streaming strategies spanning Problems, Root Causes, and Next Actions.", icon: Brain, color: "text-purple-400 bg-purple-500/5 border-purple-500/10" },
-            { title: "Decision Simulations", desc: "Sliders that model prices, ad budgets, and logistics capacity speeds.", icon: SlidersIcon, color: "text-cyan-400 bg-cyan-500/5 border-cyan-500/10" },
+            { title: "Decision Simulations", desc: "Sliders that model prices, ad budgets, and logistics capacity speeds.", icon: Sliders, color: "text-cyan-400 bg-cyan-500/5 border-cyan-500/10" },
             { title: "Interactive World Twin", desc: "Watch physical inventory supply chain packets flow dynamically on a NYC grid.", icon: Network, color: "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" },
             { title: "12-Month Projections", desc: "Generate predictive forecasts curves mapping sales conversions to costs.", icon: TrendingUp, color: "text-amber-400 bg-amber-500/5 border-amber-500/10" },
             { title: "Structured PDF Reports", desc: "Compile full transaction statements and overhead breakdowns instantly.", icon: FileText, color: "text-[#ec4899] bg-[#ec4899]/5 border-[#ec4899]/10" },
@@ -861,13 +1319,18 @@ export const LandingPage: React.FC = () => {
             { title: "Multi-Currency Ledger", desc: "Localized lookups handle USD, Rupee, and Euro exchange valuations.", icon: DollarSign, color: "text-teal-400 bg-teal-500/5 border-teal-500/10" },
             { title: "Modern Design Grid", desc: "Enjoy premium glassmorphic overlays and custom cursor draw paths.", icon: Layers, color: "text-indigo-400 bg-indigo-500/5 border-indigo-500/10" }
           ].map((feat, idx) => (
-            <div key={idx} className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 hover:border-purple-500/30 transition-all duration-300 group hover:scale-[1.02] cursor-pointer">
-              <div className={`p-3 rounded-2xl border w-11 shrink-0 ${feat.color} group-hover:scale-110 transition-transform duration-300`}>
+            <motion.div 
+              key={idx} 
+              whileHover={{ y: -8, scale: 1.03, borderColor: 'rgba(168, 85, 247, 0.3)', boxShadow: '0 20px 45px rgba(168, 85, 247, 0.15)' }}
+              transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+              className="p-6 rounded-3xl border border-white/5 bg-[#0C1224]/50 transition-all duration-300 group cursor-pointer"
+            >
+              <div className={`p-3 rounded-2xl border w-11 shrink-0 ${feat.color} group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
                 <feat.icon className="w-5 h-5" />
               </div>
               <h3 className="text-xs font-black text-white uppercase tracking-wider mt-4 group-hover:text-purple-400 transition-colors">{feat.title}</h3>
               <p className="text-[10px] text-text-muted mt-2 leading-relaxed">{feat.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -884,20 +1347,34 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Roadmap Section */}
-      <section id="roadmap" className="max-w-7xl mx-auto px-6 py-24 border-b border-white/5 relative z-10">
+      <section id="roadmap" ref={roadmapSectionRef} className="max-w-7xl mx-auto px-6 py-24 border-b border-white/5 relative z-10">
         <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">Milestones</span>
           <h2 className="text-3xl font-black text-white">Project Roadmap</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="relative grid grid-cols-1 md:grid-cols-4 gap-6">
+          
+          {/* Scroll-linked horizontal/vertical progress timeline indicator */}
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/5 -translate-y-1/2 hidden md:block z-0 overflow-hidden">
+            <motion.div 
+              style={{ scaleX: roadmapProgressSpring, transformOrigin: 'left' }}
+              className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-400 shadow-[0_0_8px_#06B6D4]"
+            />
+          </div>
+
           {[
             { phase: "PHASE 1", name: "Real-time twin monitoring", status: "Completed", desc: "Construct digital maps and link active transactions of warehouses and stores." },
             { phase: "PHASE 2", name: "AI Decision Intelligence", status: "Active", desc: "Integrate Gemini API models to output structured root cause prescriptions." },
             { phase: "PHASE 3", name: "Simulation Sandbox", status: "In Progress", desc: "Allow slider overrides for pricing factors, margins, and courier routing speed." },
             { phase: "PHASE 4", name: "Autonomous Business AI", status: "Future", desc: "Automate supply orders and ad budget allocations via AI agents." }
           ].map((item, idx) => (
-            <div key={idx} className="p-6 rounded-2xl border border-white/5 bg-[#0C1224]/50 relative space-y-4">
+            <motion.div 
+              key={idx} 
+              whileHover={{ y: -6, scale: 1.02, borderColor: 'rgba(168, 85, 247, 0.3)', boxShadow: '0 15px 30px rgba(168, 85, 247, 0.1)' }}
+              transition={{ type: 'spring', damping: 20, stiffness: 220 }}
+              className="p-6 rounded-2xl border border-white/5 bg-[#0C1224]/50 relative space-y-4 transition-all duration-300 cursor-default z-10"
+            >
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-purple-400 tracking-wider">{item.phase}</span>
                 <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
@@ -910,7 +1387,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h4 className="text-xs font-bold text-white uppercase tracking-wider">{item.name}</h4>
               <p className="text-[10px] text-text-muted leading-relaxed">{item.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -918,7 +1395,8 @@ export const LandingPage: React.FC = () => {
       {/* Footer Section */}
       <footer className="w-full border-t border-white/5 bg-[#050811] relative z-10 pt-20 pb-10">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-10">
-          {/* Col 1: Brand & Newsletter */}
+          
+          {/* Brand & Newsletter */}
           <div className="md:col-span-4 space-y-5">
             <div className="flex items-center space-x-2">
               <div className="p-1.5 rounded-lg bg-purple-650/15 border border-purple-500/20 text-purple-400">
@@ -935,16 +1413,16 @@ export const LandingPage: React.FC = () => {
                 <input 
                   type="email" 
                   placeholder="Enter email address" 
-                  className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-purple-500 w-full"
+                  className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none focus:border-purple-500 w-full animate-all"
                 />
-                <button className="p-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-white cursor-pointer border-none flex items-center justify-center shrink-0">
+                <button className="p-2 bg-purple-600 hover:bg-purple-550 rounded-xl text-white cursor-pointer border-none flex items-center justify-center shrink-0">
                   <Mail className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Col 2-5: Directory Links */}
+          {/* Directory Links */}
           <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
               <div className="text-[10px] font-bold text-white uppercase tracking-wider mb-3">Product</div>
@@ -994,27 +1472,3 @@ export const LandingPage: React.FC = () => {
     </div>
   );
 };
-
-// Simple SlidersIcon fallback
-const SlidersIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <line x1="4" y1="21" x2="4" y2="14" />
-    <line x1="4" y1="10" x2="4" y2="3" />
-    <line x1="12" y1="21" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12" y2="3" />
-    <line x1="20" y1="21" x2="20" y2="16" />
-    <line x1="20" y1="12" x2="20" y2="3" />
-    <line x1="2" y1="14" x2="6" y2="14" />
-    <line x1="10" y1="8" x2="14" y2="8" />
-    <line x1="18" y1="16" x2="22" y2="16" />
-  </svg>
-);

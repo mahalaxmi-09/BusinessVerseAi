@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthState } from '../contexts/AuthContext';
 import { 
@@ -34,6 +34,19 @@ export const LoginView: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
+
+  // Mouse offset state for 3D card parallax tilt
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX - window.innerWidth / 2) * 0.02;
+      const y = (e.clientY - window.innerHeight / 2) * 0.02;
+      setMouseOffset({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Footer modals states
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -94,7 +107,7 @@ export const LoginView: React.FC = () => {
       <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-12 relative z-10">
         
         {/* Left Side: Animated Startup Ecosystem Showcase (60% width on large screens) */}
-        <div className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-[#090D1A]/40 border-r border-white/5 relative overflow-hidden">
+        <div style={{ perspective: 1000 }} className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-[#090D1A]/40 border-r border-white/5 relative overflow-hidden">
           {/* Animated dot grid background */}
           <div className="absolute inset-0 bg-[radial-gradient(#151B2D_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
           <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-650/5 rounded-full blur-3xl pointer-events-none" />
@@ -122,7 +135,16 @@ export const LoginView: React.FC = () => {
             </div>
 
             {/* Glowing Digital Twin Showcase Box */}
-            <div className="w-full max-w-[400px] p-6 rounded-3xl border border-white/5 bg-[#101828]/60 backdrop-blur-xl relative overflow-hidden shadow-2xl flex flex-col justify-between">
+            <motion.div 
+              animate={{ 
+                rotateY: mouseOffset.x * 0.7, 
+                rotateX: -mouseOffset.y * 0.7,
+                x: mouseOffset.x * 0.3,
+                y: mouseOffset.y * 0.3
+              }}
+              whileHover={{ scale: 1.02, boxShadow: '0 20px 50px rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.3)' }}
+              className="w-full max-w-[400px] p-6 rounded-3xl border border-white/5 bg-[#101828]/60 backdrop-blur-xl relative overflow-hidden shadow-2xl flex flex-col justify-between transition-all duration-300"
+            >
               {/* Connected lines simulation (SVG) */}
               <div className="absolute inset-0 z-0 opacity-40">
                 <svg className="w-full h-full" viewBox="0 0 350 160">
@@ -143,21 +165,30 @@ export const LoginView: React.FC = () => {
 
               {/* Data numbers row */}
               <div className="grid grid-cols-2 gap-4 z-10 relative mb-4">
-                <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="p-3 bg-black/40 border border-white/5 rounded-xl transition-all cursor-default"
+                >
                   <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Estimated Revenue</span>
                   <span className="text-sm font-black text-white mt-1 block">$52,800/mo</span>
-                </div>
-                <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="p-3 bg-black/40 border border-white/5 rounded-xl transition-all cursor-default"
+                >
                   <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Operational Health</span>
                   <span className="text-sm font-black text-purple-400 mt-1 block">94/100</span>
-                </div>
+                </motion.div>
               </div>
 
               {/* AI Strategy Log */}
-              <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl z-10 relative text-[9px] text-purple-200/90 leading-relaxed font-semibold">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl z-10 relative text-[9px] text-purple-200/90 leading-relaxed font-semibold cursor-default transition-all"
+              >
                 "Gemini: Low stock in inventory warehouse B; recommending 40 units marketing shift."
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           {/* Bottom Copyright details */}
@@ -167,7 +198,7 @@ export const LoginView: React.FC = () => {
         </div>
 
         {/* Right Side: Glass Login Panel (40% width) */}
-        <div className="lg:col-span-5 flex flex-col justify-center p-6 md:p-12 relative bg-[#070B17] py-24 border-l border-white/5">
+        <div style={{ perspective: 1000 }} className="lg:col-span-5 flex flex-col justify-center p-6 md:p-12 relative bg-[#070B17] py-24 border-l border-white/5">
           <div className="w-full max-w-sm mx-auto space-y-6 my-auto z-10 relative">
             
             {/* Logo for mobile view */}
@@ -180,7 +211,17 @@ export const LoginView: React.FC = () => {
             </div>
 
             {/* Premium Glass Login Card */}
-            <div className="p-6 md:p-8 rounded-3xl border border-white/10 bg-[#101828]/60 backdrop-blur-xl shadow-2xl space-y-6">
+            <motion.div 
+              animate={{ 
+                rotateY: mouseOffset.x * 0.5, 
+                rotateX: -mouseOffset.y * 0.5,
+                x: mouseOffset.x * 0.2,
+                y: mouseOffset.y * 0.2
+              }}
+              whileHover={{ scale: 1.01, boxShadow: '0 10px 40px rgba(124, 58, 237, 0.15)', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+              transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+              className="p-6 md:p-8 rounded-3xl border border-white/10 bg-[#101828]/60 backdrop-blur-xl shadow-2xl space-y-6 transition-all duration-300"
+            >
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center justify-center space-x-1.5">
                   <LogIn className="w-4 h-4 text-purple-400" />
@@ -321,7 +362,7 @@ export const LoginView: React.FC = () => {
                   {isSignUp ? 'Sign In' : 'Create Sandbox Account'}
                 </button>
               </div>
-            </div>
+            </motion.div>
 
           </div>
         </div>

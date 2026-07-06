@@ -35,7 +35,7 @@ const queryClient = new QueryClient({
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuthState();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 const AppContent: React.FC = () => {
@@ -46,8 +46,8 @@ const AppContent: React.FC = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Public landing marketing page */}
-          <Route path="/" element={<LoginView />} />
-          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginView />} />
           
           {/* Secured/App workspace routes wrapped in the modular Sidebar/Header Layout */}
           <Route 

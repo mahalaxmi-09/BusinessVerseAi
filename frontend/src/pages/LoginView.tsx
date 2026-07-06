@@ -1,50 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthState } from '../contexts/AuthContext';
-import { useBusinessState } from '../contexts/BusinessContext';
 import { 
   Activity, 
   Mail, 
   Lock, 
   Sparkles, 
   ArrowRight, 
-  Fingerprint,
-  Eye,
-  EyeOff,
-  Terminal,
-  User,
-  LogIn,
-  Heart,
-  Maximize2,
+  Eye, 
+  EyeOff, 
+  User, 
+  LogIn, 
   HelpCircle,
   Shield,
   X,
   Code,
-  FileCheck
+  FileCheck,
+  TrendingUp,
+  Cpu,
+  Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
-  const { login, demoLogin } = useAuthState();
-  const { resetDemoData } = useBusinessState();
+  const { login } = useAuthState();
 
   const [email, setEmail] = useState('admin@businessverse.ai');
   const [password, setPassword] = useState('password123');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState('');
+
+  // Footer modals states
   const [aboutOpen, setAboutOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [apiOpen, setApiOpen] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  
-  // Password Show/Hide state
-  
-  // Interactive Login / Sign Up states
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState('');
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,258 +52,266 @@ export const LoginView: React.FC = () => {
     if (success) {
       navigate('/dashboard');
     } else {
-      setErrorMsg('Invalid login credentials. Please check and try again.');
+      setErrorMsg('Invalid credentials. Hint: use admin@businessverse.ai / password123');
     }
-  };
-
-  const handleDemoMode = async () => {
-    setIsLoading(true);
-    await demoLogin();
-    resetDemoData();
-    navigate('/dashboard');
-    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg('');
-    navigate('/dashboard');
-    setIsLoading(false);
+    // Mock successful signup and redirect to platform
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate('/dashboard');
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-[#080B14] relative overflow-y-auto flex flex-col font-sans select-none text-text-white">
+    <div className="min-h-screen bg-[#070B17] relative overflow-y-auto flex flex-col font-sans select-none text-text-white">
+      {/* Background elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-900/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-900/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-12">
+      {/* Main Container */}
+      <div className="w-full flex-1 grid grid-cols-1 lg:grid-cols-12 relative z-10">
         
-        {/* Left side: Premium Animated Showcase Preview (60% width) */}
-        <div className="hidden lg:flex lg:col-span-7 relative flex-col justify-center p-12 bg-[#090d16] overflow-hidden border-r border-border-glass py-24">
-          
-          {/* Top brand header */}
+        {/* Left Side: Animated Startup Ecosystem Showcase (60% width on large screens) */}
+        <div className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 bg-[#090D1A]/40 border-r border-white/5 relative overflow-hidden">
+          {/* Animated dot grid background */}
+          <div className="absolute inset-0 bg-[radial-gradient(#151B2D_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
+          <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-650/5 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Top Brand Logo */}
           <div className="flex items-center space-x-2.5 z-10 relative">
-            <div className="p-2 rounded-xl bg-purple-650 border border-purple-500/30 text-text-white shadow-lg shadow-purple-950/25">
-              <Activity className="w-5 h-5 animate-pulse" />
+            <div className="p-2 rounded-xl bg-purple-650/15 border border-purple-500/20 text-purple-400">
+              <Cpu className="w-5 h-5 animate-pulse" />
             </div>
-            <span className="font-extrabold text-sm tracking-tight text-text-white">BusinessVerse AI</span>
+            <span className="font-extrabold text-sm tracking-tight text-white">BusinessVerse <span className="text-[#06B6D4]">AI</span></span>
           </div>
 
-          {/* Center: Headline & Interactive Agentic Commerce Card */}
-          <div className="z-10 relative my-auto flex flex-col items-center justify-center space-y-6 w-full">
-            <div className="text-center space-y-2 max-w-md">
-              <span className="text-[10px] font-black uppercase tracking-widest text-purple-300 bg-purple-950/40 border border-purple-800/30 px-3 py-1 rounded-full">
-                Next-Gen Agentic Commerce
+          {/* Center Content: Animated Nodes Ecosystem Map */}
+          <div className="my-auto space-y-8 z-10 relative">
+            <div className="space-y-3 max-w-lg">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#06B6D4] bg-cyan-950/40 border border-cyan-800/30 px-3.5 py-1.5 rounded-full">
+                Contextual Twin Active
               </span>
-              <h1 className="text-3xl font-black text-text-white leading-tight tracking-tight">
-                Simulate transactional <span className="text-purple-300 font-black">Agentic Commerce</span> pipelines.
-              </h1>
+              <h2 className="text-3xl lg:text-5xl font-black text-white leading-tight">
+                Simulate transactional pipelines on a living digital twin.
+              </h2>
+              <p className="text-xs text-text-muted max-w-md leading-relaxed">
+                Connect finance records, supplier lead times, and retail order logs directly to Gemini predictive strategy agents.
+              </p>
             </div>
 
-            {/* High-Fidelity Simulator Operations Console Card */}
-            <div className="w-full max-w-[340px] bg-slate-900/90 text-white border border-purple-900/30 rounded-[32px] p-5 shadow-[0_25px_60px_-15px_rgba(130,76,150,0.45)] relative overflow-hidden flex flex-col justify-between float-card backdrop-blur-xl">
-              
-              {/* Card Header */}
-              <div className="flex justify-between items-center mb-3.5 z-10 relative">
-                <div className="space-y-0.5">
-                  <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                    Operations Console
-                  </h3>
-                  <span className="text-[8px] text-purple-300 font-bold bg-purple-950/50 border border-purple-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    TechNova Digital Twin
-                  </span>
-                </div>
-                <span className="h-2 w-2 rounded-full bg-emerald-450 animate-ping" />
-              </div>
-
-              {/* Console Metrics */}
-              <div className="grid grid-cols-2 gap-2.5 mb-3.5 z-10 relative">
-                <div className="bg-slate-950 border border-border-glass rounded-[20px] p-2.5">
-                  <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Net Profit</span>
-                  <span className="text-xs font-black text-emerald-400 block mt-0.5">
-                    ₹52,800/mo
-                  </span>
-                  <span className="text-[7.5px] text-text-muted mt-0.5 block">Target: ₹45k/mo</span>
-                </div>
-
-                <div className="bg-slate-950 border border-border-glass rounded-[20px] p-2.5">
-                  <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Operational Health</span>
-                  <span className="text-xs font-black text-purple-400 block mt-0.5">
-                    76%
-                  </span>
-                  <span className="text-[7.5px] text-text-muted mt-0.5 block">Health Index stable</span>
-                </div>
-              </div>
-
-              {/* AI Advisor Chatbot Feed */}
-              <div className="flex flex-col space-y-2 mb-3.5 z-10 relative">
-                {/* User Message */}
-                <div className="bg-slate-950 border border-border-glass text-slate-300 text-[8.5px] font-medium p-2 rounded-xl rounded-tr-none max-w-[85%] self-end">
-                  How is our profit affected if we open 2 more branches?
-                </div>
-
-                {/* AI CEO Message */}
-                <div className="bg-[#824C96]/20 border border-purple-800/40 text-purple-200 text-[8.5px] font-medium p-2 rounded-xl rounded-tl-none max-w-[90%] self-start">
-                  Simulation projects revenue climbing to ₹5,12,000, but payroll will increase by ₹7,600/mo, narrowing net margin by 2.4%.
-                </div>
-              </div>
-
-              {/* Sparkline Graphic (SVG Wave) */}
-              <div className="h-14 w-full bg-slate-950 border border-border-glass rounded-xl p-2 mb-3.5 z-10 relative overflow-hidden flex items-end">
-                <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="glow-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#824C96" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#824C96" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  <path 
-                    d="M0 25 C15 28, 30 10, 45 15 C60 20, 75 5, 100 2" 
-                    fill="none" 
-                    stroke="#824C96" 
-                    strokeWidth="1.5" 
-                    strokeLinecap="round"
-                  />
-                  <path 
-                    d="M0 25 C15 28, 30 10, 45 15 C60 20, 75 5, 100 2 L100 30 L0 30 Z" 
-                    fill="url(#glow-grad)"
-                  />
+            {/* Glowing Digital Twin Showcase Box */}
+            <div className="w-full max-w-[400px] p-6 rounded-3xl border border-white/5 bg-[#101828]/60 backdrop-blur-xl relative overflow-hidden shadow-2xl flex flex-col justify-between">
+              {/* Connected lines simulation (SVG) */}
+              <div className="absolute inset-0 z-0 opacity-40">
+                <svg className="w-full h-full" viewBox="0 0 350 160">
+                  <path d="M 50 40 Q 175 10 300 40" fill="none" stroke="#7C3AED" strokeWidth="1.5" />
+                  <path d="M 50 120 Q 175 150 300 120" fill="none" stroke="#06B6D4" strokeWidth="1.5" />
+                  <path d="M 175 80 L 50 40 M 175 80 L 300 40 M 175 80 L 50 120 M 175 80 L 300 120" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                 </svg>
               </div>
 
-              {/* Console Action Button */}
-              <div className="w-full py-2 bg-gradient-to-r from-[#824C96] to-[#694F8E] text-white font-extrabold rounded-xl text-[9px] text-center tracking-wider uppercase z-10 relative shadow-lg shadow-purple-950/20">
-                Simulator Active
+              {/* Header metrics */}
+              <div className="flex justify-between items-center z-10 relative mb-4">
+                <div className="flex items-center space-x-1.5">
+                  <Activity className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-[10px] text-white font-black uppercase tracking-wider">TechNova Pipeline</span>
+                </div>
+                <span className="flex items-center space-x-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" /><span className="text-[8px] text-emerald-400 font-extrabold uppercase">Live Feed</span></span>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Right side: Premium Login Panel (40% width) */}
-        <div className="lg:col-span-5 flex flex-col justify-center p-12 relative bg-[#080B14] py-24">
-          <div className="w-full max-w-sm mx-auto space-y-6 my-auto z-10 relative">
-            
-            {/* Mobile header view */}
-            <div className="lg:hidden text-center space-y-2 mb-6">
-              <div className="inline-flex p-2.5 rounded-xl bg-purple-600 text-text-white mb-1 shadow-lg shadow-purple-950/20">
-                <Activity className="w-5 h-5 animate-pulse" />
-              </div>
-              <h2 className="text-lg font-black text-text-white">BusinessVerse AI</h2>
-              <p className="text-xs text-text-muted">Sign in to your decision cockpit</p>
-            </div>
-
-            <div className="glowing-box">
-              <div className="glowing-login">
-                <div className="glowing-login-bx">
-                  <h3 className="text-xs font-bold text-text-white uppercase tracking-[0.2em] text-center flex items-center justify-center gap-1.5 mb-1 select-none">
-                    <LogIn className="w-4 h-4 text-[#7C3AED] drop-shadow-[0_0_5px_#7C3AED]" />
-                    <span>{isSignUp ? 'REGISTER' : 'LOGIN'}</span>
-                    <Heart className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED] drop-shadow-[0_0_5px_#7C3AED]" />
-                  </h3>
-
-                  {errorMsg && (
-                    <div className="w-full p-2 bg-danger-red/10 border border-danger-red/20 text-danger-red rounded-xl text-[9px] text-center font-semibold shrink-0">
-                      {errorMsg}
-                    </div>
-                  )}
-
-                  <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-3.5 w-full">
-                    {isSignUp && (
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-bold text-text-muted uppercase tracking-wider">Full Name</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                          <input
-                            type="text"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            className="w-full bg-[#080B14] border border-border-glass rounded-xl pl-9 pr-4 py-2 text-xs text-text-white focus:outline-none focus:border-purple-500 transition-colors"
-                            placeholder="Enter your name"
-                            required
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-bold text-text-muted uppercase tracking-wider">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full bg-[#080B14] border border-border-glass rounded-xl pl-9 pr-4 py-2 text-xs text-text-white focus:outline-none focus:border-purple-500 transition-colors"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[8px] font-bold text-text-muted uppercase tracking-wider">Password</label>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full bg-[#080B14] border border-border-glass rounded-xl pl-9 pr-10 py-2 text-xs text-text-white focus:outline-none focus:border-purple-500 transition-colors"
-                          required
-                        />
-                        
-                        {/* Password Show / Hide Toggler */}
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-2.5 text-text-muted hover:text-text-white cursor-pointer focus:outline-none flex items-center justify-center"
-                          title={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full py-2 bg-[#7C3AED] hover:bg-purple-700 text-text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-lg shadow-purple-950/25 focus:outline-none disabled:opacity-50"
-                    >
-                      <span>{isLoading ? 'Verifying...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-
-                    <div className="flex justify-between items-center w-full text-[9px] text-text-muted pt-1">
-                      <a href="#forgot" className="hover:text-text-white transition-colors">Forgot Password</a>
-                      <button 
-                        type="button"
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-purple-400 hover:text-purple-300 font-bold cursor-pointer focus:outline-none"
-                      >
-                        {isSignUp ? 'Sign in' : 'Sign up'}
-                      </button>
-                    </div>
-                  </form>
-
+              {/* Data numbers row */}
+              <div className="grid grid-cols-2 gap-4 z-10 relative mb-4">
+                <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                  <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Estimated Revenue</span>
+                  <span className="text-sm font-black text-white mt-1 block">$52,800/mo</span>
+                </div>
+                <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                  <span className="text-[8px] text-text-muted font-bold block uppercase tracking-wider">Operational Health</span>
+                  <span className="text-sm font-black text-purple-400 mt-1 block">94/100</span>
                 </div>
               </div>
+
+              {/* AI Strategy Log */}
+              <div className="p-3 bg-purple-950/20 border border-purple-500/20 rounded-xl z-10 relative text-[9px] text-purple-200/90 leading-relaxed font-semibold">
+                "Gemini: Low stock in inventory warehouse B; recommending 40 units marketing shift."
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Copyright details */}
+          <div className="text-[10px] text-text-muted z-10 relative">
+            BusinessVerse Twin Console v1.1.0 • secure sandboxed architecture.
+          </div>
+        </div>
+
+        {/* Right Side: Glass Login Panel (40% width) */}
+        <div className="lg:col-span-5 flex flex-col justify-center p-6 md:p-12 relative bg-[#070B17] py-24 border-l border-white/5">
+          <div className="w-full max-w-sm mx-auto space-y-6 my-auto z-10 relative">
+            
+            {/* Logo for mobile view */}
+            <div className="lg:hidden text-center space-y-2 mb-6">
+              <div className="inline-flex p-2.5 rounded-xl bg-purple-650/15 border border-purple-500/20 text-purple-400">
+                <Cpu className="w-5.5 h-5.5 animate-pulse" />
+              </div>
+              <h2 className="text-lg font-black text-white">BusinessVerse AI</h2>
+              <p className="text-xs text-text-muted">Decision cockpit authentication gateway</p>
+            </div>
+
+            {/* Premium Glass Login Card */}
+            <div className="p-6 md:p-8 rounded-3xl border border-white/10 bg-[#101828]/60 backdrop-blur-xl shadow-2xl space-y-6">
+              <div className="text-center space-y-1">
+                <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center justify-center space-x-1.5">
+                  <LogIn className="w-4 h-4 text-purple-400" />
+                  <span>{isSignUp ? 'REGISTER' : 'LOGIN'}</span>
+                </h3>
+                <p className="text-[10px] text-text-muted">
+                  {isSignUp ? 'Create a secure twin sandbox profile' : 'Enter credentials to load digital twin cockpit'}
+                </p>
+              </div>
+
+              {errorMsg && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-[10px] text-center font-bold">
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+                {isSignUp && (
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Full Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                        placeholder="Maha Lakshmi"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                      placeholder="admin@businessverse.ai"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black text-text-muted uppercase tracking-wider">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-3.5 h-3.5 text-text-muted" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-[#070B17] border border-white/10 rounded-xl pl-9 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
+                      placeholder="••••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-text-muted hover:text-white cursor-pointer focus:outline-none flex items-center justify-center bg-transparent border-none"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember & forgot */}
+                <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
+                  <label className="flex items-center space-x-1.5 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={rememberMe}
+                      onChange={() => setRememberMe(!rememberMe)}
+                      className="rounded bg-[#070B17] border-white/15 text-purple-650 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <span className="hover:text-white transition-colors cursor-pointer">Forgot Password?</span>
+                </div>
+
+                {/* Action button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 bg-gradient-to-r from-purple-650 to-indigo-650 hover:from-purple-550 hover:to-indigo-550 text-white font-extrabold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-indigo-950/40 cursor-pointer focus:outline-none border-none disabled:opacity-50"
+                >
+                  <span>{isLoading ? 'Decrypting keys...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+
+              {/* Split separator */}
+              <div className="relative flex py-2 items-center text-text-muted text-[8px] font-black uppercase tracking-widest">
+                <div className="flex-grow border-t border-white/5"></div>
+                <span className="flex-shrink mx-3">or continue with</span>
+                <div className="flex-grow border-t border-white/5"></div>
+              </div>
+
+              {/* Social OAuth triggers */}
+              <div className="grid grid-cols-2 gap-3">
+                <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.186 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.706 0 3.199.687 4.3 1.8l3.186-3.186C19.227 1.8 15.932.9 12.24.9c-6.133 0-11.1 4.967-11.1 11.1s4.967 11.1 11.1 11.1c5.961 0 10.985-4.28 10.985-11.1 0-.643-.075-1.286-.2-1.725H12.24Z" />
+                  </svg>
+                  <span>Google</span>
+                </button>
+                <button className="flex items-center justify-center space-x-2 p-2 bg-[#070B17] border border-white/10 rounded-xl hover:border-white/20 transition-all cursor-pointer text-[10px] text-white">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4 18.3 4.3 18.3 4.3c.7 1.6.2 2.9.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z" />
+                  </svg>
+                  <span>GitHub</span>
+                </button>
+              </div>
+
+              {/* Toggle register / signin link */}
+              <div className="text-center text-[10px] text-text-muted">
+                <span>{isSignUp ? 'Already have an account?' : 'Need to simulate a new company?'} </span>
+                <button 
+                  type="button" 
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-purple-400 hover:text-purple-300 font-bold focus:outline-none cursor-pointer bg-transparent border-none"
+                >
+                  {isSignUp ? 'Sign In' : 'Create Sandbox Account'}
+                </button>
+              </div>
             </div>
 
           </div>
         </div>
+
       </div>
 
       {/* Stripe-Style Full-Width Landing Footer */}
-      <footer className="w-full border-t border-border-glass bg-slate-950/60 backdrop-blur-md py-12 px-6 lg:px-16 z-10 relative shrink-0 mt-auto">
+      <footer className="w-full border-t border-white/5 bg-slate-950/60 backdrop-blur-md py-12 px-6 lg:px-16 z-10 relative shrink-0 mt-auto">
         <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           
           {/* Column 1: Brand details */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 rounded-lg bg-purple-600 border border-purple-500 text-white shrink-0">
+              <div className="p-1.5 rounded-lg bg-purple-650/15 border border-purple-500/20 text-purple-400 shrink-0">
                 <Activity className="w-4 h-4 animate-pulse" />
               </div>
-              <span className="font-black text-sm text-white tracking-tight">BusinessVerse AI</span>
+              <span className="font-extrabold text-sm text-white tracking-tight">BusinessVerse <span className="text-[#06B6D4]">AI</span></span>
             </div>
             <p className="text-[11px] text-text-muted leading-relaxed max-w-xs">
               Simulate transactional pipelines, test pricing elasticity, and forecast EBITDA margins with interactive digital twin models.
@@ -322,13 +325,13 @@ export const LoginView: React.FC = () => {
           {/* Column 2: Platform Links */}
           <div className="space-y-3">
             <h4 className="text-[10px] font-black uppercase text-white tracking-wider">Simulations</h4>
-            <ul className="space-y-2 text-[11px]">
+            <ul className="space-y-2 text-[11px] list-none p-0">
               {['Digital Twin Hub', 'Scenario Modeler', 'EBITDA Projections', 'Flow Telemetry'].map((l) => (
                 <li key={l}>
-                  <a href="#features" className="text-text-muted hover:text-white transition-colors group relative py-1 block w-fit">
+                  <span className="text-text-muted hover:text-white transition-colors cursor-pointer group relative py-1 block w-fit">
                     <span>{l}</span>
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 group-hover:w-full" />
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -337,15 +340,15 @@ export const LoginView: React.FC = () => {
           {/* Column 3: Resources Links */}
           <div className="space-y-3">
             <h4 className="text-[10px] font-black uppercase text-white tracking-wider">Resources</h4>
-            <ul className="space-y-2 text-[11px]">
+            <ul className="space-y-2 text-[11px] list-none p-0">
               <li>
-                <button onClick={() => setAboutOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none">
+                <button onClick={() => setAboutOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none p-0">
                   <span>About Us</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </button>
               </li>
               <li>
-                <button onClick={() => setApiOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none">
+                <button onClick={() => setApiOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none p-0">
                   <span>Developer API</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </button>
@@ -362,15 +365,15 @@ export const LoginView: React.FC = () => {
           {/* Column 4: Security & Compliance */}
           <div className="space-y-3">
             <h4 className="text-[10px] font-black uppercase text-white tracking-wider">Compliance</h4>
-            <ul className="space-y-2 text-[11px]">
+            <ul className="space-y-2 text-[11px] list-none p-0">
               <li>
-                <button onClick={() => setSecurityOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none">
+                <button onClick={() => setSecurityOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none p-0">
                   <span>Security Sandbox</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </button>
               </li>
               <li>
-                <button onClick={() => setTermsOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none">
+                <button onClick={() => setTermsOpen(true)} className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer group relative py-1 block w-fit text-left focus:outline-none p-0">
                   <span>Terms of Service</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300 group-hover:w-full" />
                 </button>
@@ -380,7 +383,7 @@ export const LoginView: React.FC = () => {
 
         </div>
 
-        <div className="max-w-[1200px] mx-auto border-t border-border-glass mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-text-muted space-y-2 md:space-y-0">
+        <div className="max-w-[1200px] mx-auto border-t border-white/5 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-text-muted space-y-2 md:space-y-0">
           <span>© 2026 BusinessVerse AI Inc. All rights reserved.</span>
           <div className="flex space-x-6">
             <span className="flex items-center text-text-muted">
@@ -402,7 +405,7 @@ export const LoginView: React.FC = () => {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="w-full max-w-md bg-slate-900 border border-purple-900/35 rounded-3xl p-6 shadow-2xl relative overflow-hidden"
             >
-              <div className="flex justify-between items-center border-b border-border-glass pb-3 mb-4">
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                 <h3 className="text-sm font-black text-white flex items-center">
                   <Sparkles className="w-4 h-4 mr-2 text-purple-400" />
                   About BusinessVerse AI
@@ -414,7 +417,7 @@ export const LoginView: React.FC = () => {
               <p className="text-xs text-slate-300 leading-relaxed mb-4">
                 BusinessVerse is an enterprise-grade digital twin sandbox workspace. It simulates transactional pipelines, tests pricing lever elasticity, and optimizes supply-chain operations using automated AI Strategy agents.
               </p>
-              <div className="flex flex-wrap gap-1.5 border-t border-border-glass pt-4">
+              <div className="flex flex-wrap gap-1.5 border-t border-white/5 pt-4">
                 {['Digital Twin', 'What-If Simulation', 'AI Advisory', 'ISO 27001'].map(t => (
                   <span key={t} className="text-[8px] font-bold text-purple-300 bg-purple-950/50 border border-purple-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
                     {t}
@@ -437,7 +440,7 @@ export const LoginView: React.FC = () => {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="w-full max-w-md bg-slate-900 border border-purple-900/35 rounded-3xl p-6 shadow-2xl relative overflow-hidden"
             >
-              <div className="flex justify-between items-center border-b border-border-glass pb-3 mb-4">
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                 <h3 className="text-sm font-black text-white flex items-center">
                   <Shield className="w-4 h-4 mr-2 text-purple-400" />
                   Security & Compliance
@@ -465,7 +468,7 @@ export const LoginView: React.FC = () => {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="w-full max-w-md bg-slate-900 border border-purple-900/35 rounded-3xl p-6 shadow-2xl relative overflow-hidden"
             >
-              <div className="flex justify-between items-center border-b border-border-glass pb-3 mb-4">
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                 <h3 className="text-sm font-black text-white flex items-center">
                   <FileCheck className="w-4 h-4 mr-2 text-purple-400" />
                   Sandbox Terms of Service
@@ -493,7 +496,7 @@ export const LoginView: React.FC = () => {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="w-full max-w-md bg-slate-900 border border-purple-900/35 rounded-3xl p-6 shadow-2xl relative overflow-hidden"
             >
-              <div className="flex justify-between items-center border-b border-border-glass pb-3 mb-4">
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                 <h3 className="text-sm font-black text-white flex items-center">
                   <Code className="w-4 h-4 mr-2 text-purple-400" />
                   Developer Sandbox Payload
@@ -505,7 +508,7 @@ export const LoginView: React.FC = () => {
               <p className="text-xs text-slate-300 leading-relaxed mb-3">
                 Integrate BusinessVerse telemetry with your CRM or ERP endpoint logs. Example payload structure:
               </p>
-              <pre className="bg-slate-950 border border-border-glass rounded-xl p-3 text-[10px] text-emerald-400 font-mono overflow-x-auto select-all">
+              <pre className="bg-slate-950 border border-white/5 rounded-xl p-3 text-[10px] text-emerald-400 font-mono overflow-x-auto select-all">
 {`{
   "twin_id": "nyc_retail_01",
   "operational_health": 0.76,
